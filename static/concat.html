@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8">
+    <style>
+        .input {
+            width: 100%;
+            min-height: 200px;
+            max-height: 500px
+        }
+
+        .his {
+            margin-top: 16px
+        }
+
+        .box {
+            border: dashed 1px;
+            text-align: left
+        }
+    </style>
+    <title>文本拼接</title>
+</head>
+
+<body>
+    <script>
+        'use strict';
+
+        function isLetter(c) {
+            let v = c.charCodeAt();
+            return (v >= 65 && v <= 90) || (v >= 97 && v <= 122);
+        }
+
+        function concat_text(text, nocomment) {
+            let lines = text.split("\n");
+            let s = "";
+            let broke = true;
+            for (let line of lines) {
+                line = line.trim();
+                if (!broke) {
+                    s += " ";
+                }
+                if (nocomment && line.startsWith("//")) {
+                    line = line.substr(2).trimStart();
+                }
+                broke = line.endsWith("-");
+                if (broke) {
+                    line = line.substr(0, line.length - 1);
+                }
+                let prev = "";
+                for (let i = 0; i < line.length; i++) {
+                    let cur = line.charAt(i);
+                    if (cur == '-' && line.charAt(i + 1) == ' ' && isLetter(prev) && isLetter(line.charAt(i + 2))) {
+                        i++;
+                        continue;
+                    }
+                    s += cur;
+                    prev = cur;
+                }
+            }
+            return s;
+        }
+
+        function do_reset() {
+            document.getElementById("input").value = "";
+        }
+
+        function do_patse() {
+            navigator.clipboard.readText()
+                .then(text => {
+                    document.getElementById("input").value = text;
+                    do_concat();
+                })
+                .catch(err => { });
+        }
+
+        function do_concat() {
+            let input = document.getElementById("input");
+            let text = concat_text(input.value, document.getElementById("nocomment").checked);
+            if (text.length === 0) {
+                return;
+            }
+            if (document.getElementById("finalline").checked && !input.value.endsWith("\n")) {
+                input.value += "\n";
+            }
+            for (let i = 4; i != 0; i--) {
+                document.getElementById("his" + i).textContent = document.getElementById("his" + (i - 1)).textContent
+            }
+            let t = document.getElementById("his0");
+            t.textContent = text;
+            do_select(t);
+        }
+
+        function do_select(obj) {
+            let sel = window.getSelection();
+            let range = document.createRange();
+            range.selectNodeContents(obj);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+    </script>
+    <div style="text-align:center; margin:50px; font-family:'Segoe UI'">
+        <div>
+            <textarea id="input" class="input" onfocus="this.select()" onpaste="setTimeout(do_concat, 0)"
+                autofocus></textarea>
+        </div>
+        <span>
+            <input type="checkbox" id="finalline" />
+            <label for="finalline">空行</label>
+        </span>
+        <span>
+            <input type="checkbox" id="nocomment" />
+            <label for="nocomment">去注释</label>
+        </span>
+        <button onclick="do_concat()">拼接</button>
+        <button onclick="do_reset()">清空</button>
+        <button onclick="do_patse()">粘贴</button>
+        <div class="his">
+            <div id="his0" class="box" onclick="do_select(this)"></div>
+        </div>
+        <div class="his">
+            <div id="his1" class="box"></div>
+        </div>
+        <div class="his">
+            <div id="his2" class="box"></div>
+        </div>
+        <div class="his">
+            <div id="his3" class="box"></div>
+        </div>
+        <div class="his">
+            <div id="his4" class="box"></div>
+        </div>
+    </div>
+</body>
+
+</html>
