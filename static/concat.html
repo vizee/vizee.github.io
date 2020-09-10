@@ -71,7 +71,16 @@
                     document.getElementById("input").value = text;
                     do_concat();
                 })
-                .catch(err => { });
+                .catch(err => { console.log(err); });
+        }
+
+        function do_append() {
+            navigator.clipboard.readText()
+                .then(text => {
+                    document.getElementById("input").value += text;
+                    do_concat();
+                })
+                .catch(err => { console.log(err); });
         }
 
         function do_concat() {
@@ -79,9 +88,6 @@
             let text = concat_text(input.value, document.getElementById("nocomment").checked);
             if (text.length === 0) {
                 return;
-            }
-            if (document.getElementById("finalline").checked && !input.value.endsWith("\n")) {
-                input.value += "\n";
             }
             for (let i = 4; i != 0; i--) {
                 document.getElementById("his" + i).textContent = document.getElementById("his" + (i - 1)).textContent
@@ -104,17 +110,14 @@
             <textarea id="input" class="input" onfocus="this.select()" onpaste="setTimeout(do_concat, 0)"
                 autofocus></textarea>
         </div>
-        <span>
-            <input type="checkbox" id="finalline" />
-            <label for="finalline">空行</label>
-        </span>
+        <button onclick="do_concat()">concat</button>
+        <button onclick="do_reset()">reset</button>
+        <button onclick="do_patse()">paste</button>
+        <button onclick="do_append()">append</button>
         <span>
             <input type="checkbox" id="nocomment" />
-            <label for="nocomment">去注释</label>
+            <label for="nocomment">no comment</label>
         </span>
-        <button onclick="do_concat()">拼接</button>
-        <button onclick="do_reset()">清空</button>
-        <button onclick="do_patse()">粘贴</button>
         <div class="his">
             <div id="his0" class="box" onclick="do_select(this)"></div>
         </div>

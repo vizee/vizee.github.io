@@ -333,7 +333,7 @@
 
   <url>
     <loc>https://vizee.org/</loc>
-    <lastmod>2020-09-09</lastmod>
+    <lastmod>2020-09-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -341,28 +341,28 @@
   
   <url>
     <loc>https://vizee.org/tags/mysql/</loc>
-    <lastmod>2020-09-09</lastmod>
+    <lastmod>2020-09-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://vizee.org/tags/linux/</loc>
-    <lastmod>2020-09-09</lastmod>
+    <lastmod>2020-09-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://vizee.org/tags/consensus/</loc>
-    <lastmod>2020-09-09</lastmod>
+    <lastmod>2020-09-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://vizee.org/tags/oj/</loc>
-    <lastmod>2020-09-09</lastmod>
+    <lastmod>2020-09-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
