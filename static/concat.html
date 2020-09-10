@@ -77,7 +77,7 @@
         function do_append() {
             navigator.clipboard.readText()
                 .then(text => {
-                    document.getElementById("input").value += text;
+                    document.getElementById("input").value += "\n" + text;
                     do_concat();
                 })
                 .catch(err => { console.log(err); });
