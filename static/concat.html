@@ -1,8 +1,10 @@
 <!DOCTYPE html>
+<!-- saved from url=(0036)https://vizee.org/static/concat.html -->
 <html lang="zh-CN">
 
 <head>
-    <meta http-equiv="content-type" content="text/html;charset=utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
     <style>
         .input {
             width: 100%;
@@ -17,6 +19,23 @@
         .box {
             border: dashed 1px;
             text-align: left
+        }
+
+        body {
+            background: #f2f2f2;
+            color: #333;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #222;
+                color: #eee;
+            }
+
+            .input {
+                background-color: #222;
+                color: #eee;
+            }
         }
     </style>
     <title>文本拼接</title>
@@ -108,14 +127,14 @@
     <div style="text-align:center; margin:50px; font-family:'Segoe UI'">
         <div>
             <textarea id="input" class="input" onfocus="this.select()" onpaste="setTimeout(do_concat, 0)"
-                autofocus></textarea>
+                autofocus=""></textarea>
         </div>
-        <button onclick="do_concat()">concat</button>
-        <button onclick="do_reset()">reset</button>
         <button onclick="do_patse()">paste</button>
         <button onclick="do_append()">append</button>
+        <button onclick="do_concat()">concat</button>
+        <button onclick="do_reset()">reset</button>
         <span>
-            <input type="checkbox" id="nocomment" />
+            <input type="checkbox" id="nocomment">
             <label for="nocomment">no comment</label>
         </span>
         <div class="his">
@@ -134,6 +153,7 @@
             <div id="his4" class="box"></div>
         </div>
     </div>
+
 </body>
 
 </html>
