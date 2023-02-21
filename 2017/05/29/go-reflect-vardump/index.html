@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 5.4.1">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://unpkg.com/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"vizee.org","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.11.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="利用 cache 在一些方面做了优化, 总体性能还是不错 这个实现会被合并到 https:&#x2F;&#x2F;github.com&#x2F;vizee&#x2F;echo 作为 echo.Var 的输出实现">
+<meta property="og:type" content="article">
+<meta property="og:title" content="go 使用 reflect 实现 vardump">
+<meta property="og:url" content="https://vizee.org/2017/05/29/go-reflect-vardump/index.html">
+<meta property="og:site_name" content="&#x2F;vizee">
+<meta property="og:description" content="利用 cache 在一些方面做了优化, 总体性能还是不错 这个实现会被合并到 https:&#x2F;&#x2F;github.com&#x2F;vizee&#x2F;echo 作为 echo.Var 的输出实现">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2017-05-29T12:39:00.000Z">
+<meta property="article:modified_time" content="2023-02-21T13:02:53.764Z">
+<meta property="article:author" content="vizee">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://vizee.org/2017/05/29/go-reflect-vardump/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://vizee.org/2017/05/29/go-reflect-vardump/","path":"2017/05/29/go-reflect-vardump/","title":"go 使用 reflect 实现 vardump"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>go 使用 reflect 实现 vardump | /vizee</title>
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">/vizee</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-overview-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">vizee</p>
+  <div class="site-description" itemprop="description">vegetable is zombie evilest enemy</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">53</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/vizee" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;vizee" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll site-overview-item animated">
+    <div class="links-of-blogroll-title"><i class="fa fa-globe fa-fw"></i>
+      传送门
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://kingsamchen.github.io/" title="https:&#x2F;&#x2F;kingsamchen.github.io" rel="noopener" target="_blank">KC</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://powman.org/" title="https:&#x2F;&#x2F;powman.org" rel="noopener" target="_blank">泡面</a>
+        </li>
+    </ul>
+  </div>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://vizee.org/2017/05/29/go-reflect-vardump/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="vizee">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="/vizee">
+      <meta itemprop="description" content="vegetable is zombie evilest enemy">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="go 使用 reflect 实现 vardump | /vizee">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          go 使用 reflect 实现 vardump
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2017-05-29 20:39:00" itemprop="dateCreated datePublished" datetime="2017-05-29T20:39:00+08:00">2017-05-29</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2023-02-21 21:02:53" itemprop="dateModified" datetime="2023-02-21T21:02:53+08:00">2023-02-21</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>利用 cache 在一些方面做了优化, 总体性能还是不错</p>
+<p>这个实现会被合并到 <a target="_blank" rel="noopener" href="https://github.com/vizee/echo">https://github.com/vizee/echo</a> 作为 echo.Var 的输出实现</p>
+<span id="more"></span>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> vardump</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;io&quot;</span></span><br><span class="line">	<span class="string">&quot;reflect&quot;</span></span><br><span class="line">	<span class="string">&quot;sync&quot;</span></span><br><span class="line">	<span class="string">&quot;unsafe&quot;</span></span><br><span class="line"></span><br><span class="line">	<span class="string">&quot;github.com/vizee/litebuf&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> rtcache <span class="keyword">struct</span> &#123;</span><br><span class="line">	sync.RWMutex</span><br><span class="line">	types <span class="keyword">map</span>[reflect.Type]*rtype</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> bufpool = sync.Pool&#123;</span><br><span class="line">	New: <span class="function"><span class="keyword">func</span><span class="params">()</span></span> <span class="keyword">interface</span>&#123;&#125; &#123;</span><br><span class="line">		<span class="keyword">return</span> &amp;litebuf.Buffer&#123;&#125;</span><br><span class="line">	&#125;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> rtype <span class="keyword">struct</span> &#123;</span><br><span class="line">	typ    <span class="type">string</span></span><br><span class="line">	fields []<span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">makertype</span><span class="params">(rt reflect.Type)</span></span> *rtype &#123;</span><br><span class="line">	n := rt.NumField()</span><br><span class="line">	t := &amp;rtype&#123;</span><br><span class="line">		typ:    rt.String(),</span><br><span class="line">		fields: <span class="built_in">make</span>([]<span class="type">string</span>, n),</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; n; i++ &#123;</span><br><span class="line">		rf := rt.Field(i)</span><br><span class="line">		t.fields[i] = rf.Name</span><br><span class="line">		<span class="keyword">if</span> rf.Type.Kind() == reflect.Struct &#123;</span><br><span class="line">			<span class="keyword">if</span> _, ok := rtcache.types[rf.Type]; !ok &#123;</span><br><span class="line">				makertype(rf.Type)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	rtcache.types[rt] = t</span><br><span class="line">	<span class="keyword">return</span> t</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">getrtype</span><span class="params">(rt reflect.Type)</span></span> *rtype &#123;</span><br><span class="line">	rtcache.RLock()</span><br><span class="line">	t := rtcache.types[rt]</span><br><span class="line">	rtcache.RUnlock()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> t == <span class="literal">nil</span> &#123;</span><br><span class="line">		rtcache.Lock()</span><br><span class="line">		t = rtcache.types[rt]</span><br><span class="line">		<span class="keyword">if</span> t == <span class="literal">nil</span> &#123;</span><br><span class="line">			t = makertype(rt)</span><br><span class="line">		&#125;</span><br><span class="line">		rtcache.Unlock()</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> t</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> vari <span class="keyword">struct</span> &#123;</span><br><span class="line">	maxDeep <span class="type">int</span></span><br><span class="line">	deep    <span class="type">int</span></span><br><span class="line">	buf     *litebuf.Buffer</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(v *vari)</span></span> dumpStruct(rv reflect.Value) &#123;</span><br><span class="line">	rt := getrtype(rv.Type())</span><br><span class="line">	v.buf.WriteString(rt.typ)</span><br><span class="line">	v.buf.WriteByte(<span class="string">&#x27;&#123;&#x27;</span>)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(rt.fields); i++ &#123;</span><br><span class="line">		<span class="keyword">if</span> i &gt; <span class="number">0</span> &#123;</span><br><span class="line">			v.buf.WriteByte(<span class="string">&#x27; &#x27;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">		v.buf.WriteString(rt.fields[i])</span><br><span class="line">		v.buf.WriteByte(<span class="string">&#x27;:&#x27;</span>)</span><br><span class="line">		t := rv.Field(i)</span><br><span class="line">		<span class="keyword">if</span> t.Kind() == reflect.Interface &amp;&amp; t.CanInterface() &#123;</span><br><span class="line">			v.dump(t.Interface())</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			v.dumpValue(t)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	v.buf.WriteByte(<span class="string">&#x27;&#125;&#x27;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(v *vari)</span></span> dumpMap(rv reflect.Value) &#123;</span><br><span class="line">	v.buf.WriteString(<span class="string">`map[`</span>)</span><br><span class="line">	keys := rv.MapKeys()</span><br><span class="line">	<span class="keyword">for</span> i := <span class="keyword">range</span> keys &#123;</span><br><span class="line">		<span class="keyword">if</span> i &gt; <span class="number">0</span> &#123;</span><br><span class="line">			v.buf.WriteByte(<span class="string">&#x27; &#x27;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">		v.dumpValue(keys[i])</span><br><span class="line">		v.buf.WriteByte(<span class="string">&#x27;:&#x27;</span>)</span><br><span class="line">		t := rv.MapIndex(keys[i])</span><br><span class="line">		<span class="keyword">if</span> t.Kind() == reflect.Interface &#123;</span><br><span class="line">			v.dump(t.Interface())</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			v.dumpValue(t)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	v.buf.WriteByte(<span class="string">&#x27;]&#x27;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(v *vari)</span></span> dumpArray(rv reflect.Value) &#123;</span><br><span class="line">	v.buf.WriteByte(<span class="string">&#x27;[&#x27;</span>)</span><br><span class="line">	n := rv.Len()</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; n; i++ &#123;</span><br><span class="line">		<span class="keyword">if</span> i &gt; <span class="number">0</span> &#123;</span><br><span class="line">			v.buf.WriteByte(<span class="string">&#x27; &#x27;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">		t := rv.Index(i)</span><br><span class="line">		<span class="keyword">if</span> t.Kind() == reflect.Interface &amp;&amp; t.CanInterface() &#123;</span><br><span class="line">			v.dump(t.Interface())</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			v.dumpValue(t)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	v.buf.WriteByte(<span class="string">&#x27;]&#x27;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(v *vari)</span></span> dumpValue(rv reflect.Value) &#123;</span><br><span class="line">	<span class="keyword">switch</span> rv.Kind() &#123;</span><br><span class="line">	<span class="keyword">case</span> reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:</span><br><span class="line">		v.buf.AppendInt(rv.Int(), <span class="number">10</span>)</span><br><span class="line">	<span class="keyword">case</span> reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:</span><br><span class="line">		v.buf.AppendUint(rv.Uint(), <span class="number">10</span>)</span><br><span class="line">	<span class="keyword">case</span> reflect.Ptr:</span><br><span class="line">		<span class="keyword">if</span> v.deep &lt; v.maxDeep &#123;</span><br><span class="line">			<span class="keyword">if</span> rv.IsNil() &#123;</span><br><span class="line">				v.buf.WriteString(<span class="string">&quot;nil&quot;</span>)</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				v.buf.WriteByte(<span class="string">&#x27;&amp;&#x27;</span>)</span><br><span class="line">				v.deep++</span><br><span class="line">				v.dumpValue(rv.Elem())</span><br><span class="line">				v.deep--</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">fallthrough</span></span><br><span class="line">	<span class="keyword">case</span> reflect.UnsafePointer, reflect.Chan, reflect.Func:</span><br><span class="line">		p := rv.Pointer()</span><br><span class="line">		<span class="keyword">if</span> p == <span class="number">0</span> &#123;</span><br><span class="line">			v.buf.WriteString(<span class="string">&quot;nil&quot;</span>)</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			v.buf.WriteString(<span class="string">&quot;0x&quot;</span>)</span><br><span class="line">			v.buf.AppendUint(<span class="type">uint64</span>(p), <span class="number">16</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	<span class="keyword">case</span> reflect.Bool:</span><br><span class="line">		<span class="keyword">if</span> rv.Bool() &#123;</span><br><span class="line">			v.buf.WriteString(<span class="string">&quot;true&quot;</span>)</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			v.buf.WriteString(<span class="string">&quot;false&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	<span class="keyword">case</span> reflect.Float32:</span><br><span class="line">		v.buf.AppendFloat(rv.Float(), <span class="string">&#x27;g&#x27;</span>, <span class="number">-1</span>, <span class="number">32</span>)</span><br><span class="line">	<span class="keyword">case</span> reflect.Float64:</span><br><span class="line">		v.buf.AppendFloat(rv.Float(), <span class="string">&#x27;g&#x27;</span>, <span class="number">-1</span>, <span class="number">64</span>)</span><br><span class="line">	<span class="keyword">case</span> reflect.String:</span><br><span class="line">		v.buf.WriteString(rv.String())</span><br><span class="line">	<span class="keyword">case</span> reflect.Interface:</span><br><span class="line">		<span class="keyword">if</span> rv.IsNil() &#123;</span><br><span class="line">			v.buf.WriteString(<span class="string">&quot;nil&quot;</span>)</span><br><span class="line">		&#125; <span class="keyword">else</span> <span class="keyword">if</span> rv.CanInterface() &amp;&amp; v.deep &lt; v.maxDeep &#123;</span><br><span class="line">			v.deep++</span><br><span class="line">			v.dumpValue(reflect.ValueOf(rv.Interface()))</span><br><span class="line">			v.deep--</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			p := rv.InterfaceData()</span><br><span class="line">			v.buf.WriteString(<span class="string">&quot;&#123;0x&quot;</span>)</span><br><span class="line">			v.buf.AppendUint(<span class="type">uint64</span>(p[<span class="number">0</span>]), <span class="number">16</span>)</span><br><span class="line">			v.buf.WriteString(<span class="string">&quot;,0x&quot;</span>)</span><br><span class="line">			v.buf.AppendUint(<span class="type">uint64</span>(p[<span class="number">1</span>]), <span class="number">16</span>)</span><br><span class="line">			v.buf.WriteByte(<span class="string">&#x27;&#125;&#x27;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	<span class="keyword">case</span> reflect.Complex64, reflect.Complex128:</span><br><span class="line">		c := rv.Complex()</span><br><span class="line">		v.buf.AppendFloat(<span class="built_in">real</span>(c), <span class="string">&#x27;g&#x27;</span>, <span class="number">-1</span>, <span class="number">64</span>)</span><br><span class="line">		v.buf.WriteByte(<span class="string">&#x27;+&#x27;</span>)</span><br><span class="line">		v.buf.AppendFloat(<span class="built_in">imag</span>(c), <span class="string">&#x27;g&#x27;</span>, <span class="number">-1</span>, <span class="number">64</span>)</span><br><span class="line">		v.buf.WriteByte(<span class="string">&#x27;i&#x27;</span>)</span><br><span class="line">	<span class="keyword">case</span> reflect.Map:</span><br><span class="line">		<span class="keyword">if</span> rv.IsNil() &#123;</span><br><span class="line">			v.buf.WriteString(<span class="string">&quot;nil&quot;</span>)</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			v.dumpMap(rv)</span><br><span class="line">		&#125;</span><br><span class="line">	<span class="keyword">case</span> reflect.Struct:</span><br><span class="line">		v.dumpStruct(rv)</span><br><span class="line">	<span class="keyword">case</span> reflect.Array, reflect.Slice:</span><br><span class="line">		v.dumpArray(rv)</span><br><span class="line">	<span class="keyword">default</span>:</span><br><span class="line">		v.buf.WriteString(<span class="string">&quot;&lt;invalid kind&gt;&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(v *vari)</span></span> dump(x <span class="keyword">interface</span>&#123;&#125;) &#123;</span><br><span class="line">	<span class="keyword">switch</span> t := x.(<span class="keyword">type</span>) &#123;</span><br><span class="line">	<span class="keyword">case</span> <span class="literal">nil</span>:</span><br><span class="line">		v.buf.WriteString(<span class="string">&quot;nil&quot;</span>)</span><br><span class="line">	<span class="keyword">case</span> <span class="type">int</span>:</span><br><span class="line">		v.buf.AppendInt(<span class="type">int64</span>(t), <span class="number">10</span>)</span><br><span class="line">	<span class="keyword">case</span> <span class="type">int8</span>:</span><br><span class="line">		v.buf.AppendInt(<span class="type">int64</span>(t), <span class="number">10</span>)</span><br><span class="line">	<span class="keyword">case</span> <span class="type">int16</span>:</span><br><span class="line">		v.buf.AppendInt(<span class="type">int64</span>(t), <span class="number">10</span>)</span><br><span class="line">	<span class="keyword">case</span> <span class="type">int32</span>:</span><br><span class="line">		v.buf.AppendInt(<span class="type">int64</span>(t), <span class="number">10</span>)</span><br><span class="line">	<span class="keyword">case</span> <span class="type">int64</span>:</span><br><span class="line">		v.buf.AppendInt(t, <span class="number">10</span>)</span><br><span class="line">	<span class="keyword">case</span> <span class="type">uint</span>:</span><br><span class="line">		v.buf.AppendUint(<span class="type">uint64</span>(t), <span class="number">10</span>)</span><br><span class="line">	<span class="keyword">case</span> <span class="type">uint8</span>:</span><br><span class="line">		v.buf.AppendUint(<span class="type">uint64</span>(t), <span class="number">10</span>)</span><br><span class="line">	<span class="keyword">case</span> <span class="type">uint16</span>:</span><br><span class="line">		v.buf.AppendUint(<span class="type">uint64</span>(t), <span class="number">10</span>)</span><br><span class="line">	<span class="keyword">case</span> <span class="type">uint32</span>:</span><br><span class="line">		v.buf.AppendUint(<span class="type">uint64</span>(t), <span class="number">10</span>)</span><br><span class="line">	<span class="keyword">case</span> <span class="type">uint64</span>:</span><br><span class="line">		v.buf.AppendUint(t, <span class="number">10</span>)</span><br><span class="line">	<span class="keyword">case</span> <span class="type">uintptr</span>:</span><br><span class="line">		v.buf.AppendUint(<span class="type">uint64</span>(t), <span class="number">10</span>)</span><br><span class="line">	<span class="keyword">case</span> <span class="type">float32</span>:</span><br><span class="line">		v.buf.AppendFloat(<span class="type">float64</span>(t), <span class="string">&#x27;g&#x27;</span>, <span class="number">-1</span>, <span class="number">32</span>)</span><br><span class="line">	<span class="keyword">case</span> <span class="type">float64</span>:</span><br><span class="line">		v.buf.AppendFloat(t, <span class="string">&#x27;g&#x27;</span>, <span class="number">-1</span>, <span class="number">64</span>)</span><br><span class="line">	<span class="keyword">case</span> <span class="type">bool</span>:</span><br><span class="line">		<span class="keyword">if</span> t &#123;</span><br><span class="line">			v.buf.WriteString(<span class="string">&quot;true&quot;</span>)</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			v.buf.WriteString(<span class="string">&quot;false&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	<span class="keyword">case</span> unsafe.Pointer:</span><br><span class="line">		v.buf.WriteString(<span class="string">&quot;0x&quot;</span>)</span><br><span class="line">		v.buf.AppendUint(<span class="type">uint64</span>(<span class="type">uintptr</span>(t)), <span class="number">16</span>)</span><br><span class="line">	<span class="keyword">case</span> <span class="type">string</span>:</span><br><span class="line">		v.buf.WriteString(t)</span><br><span class="line">	<span class="keyword">case</span> reflect.Value:</span><br><span class="line">		v.dumpValue(t)</span><br><span class="line">	<span class="keyword">default</span>:</span><br><span class="line">		v.dumpValue(reflect.ValueOf(t))</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Dump</span><span class="params">(w io.Writer, x <span class="keyword">interface</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">	buf := bufpool.Get().(*litebuf.Buffer)</span><br><span class="line">	v := vari&#123;</span><br><span class="line">		maxDeep: <span class="number">1</span>,</span><br><span class="line">		buf:     buf,</span><br><span class="line">	&#125;</span><br><span class="line">	v.dump(x)</span><br><span class="line">	w.Write(buf.Bytes())</span><br><span class="line">	bufpool.Put(buf)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">	rtcache.types = <span class="built_in">make</span>(<span class="keyword">map</span>[reflect.Type]*rtype)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2017/05/08/hdu-2222/" rel="prev" title="hdu 2222">
+                  <i class="fa fa-chevron-left"></i> hdu 2222
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2017/06/21/parsing-go-function-declarations/" rel="next" title="go 解析函数声明">
+                  go 解析函数声明 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">vizee</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://unpkg.com/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

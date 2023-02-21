@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 5.4.1">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://unpkg.com/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"vizee.org","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.11.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="背景Go 项目用的是 GitLab CI&#x2F;CD + Kubernetes 执行器。之前一直有点慢，最近用 ko 优化了一下流程，记录一下。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="在 Go CI&#x2F;CD 中使用 ko">
+<meta property="og:url" content="https://vizee.org/2022/05/01/go-ci-cd-using-ko/index.html">
+<meta property="og:site_name" content="&#x2F;vizee">
+<meta property="og:description" content="背景Go 项目用的是 GitLab CI&#x2F;CD + Kubernetes 执行器。之前一直有点慢，最近用 ko 优化了一下流程，记录一下。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-05-01T08:00:49.000Z">
+<meta property="article:modified_time" content="2023-02-21T13:02:53.764Z">
+<meta property="article:author" content="vizee">
+<meta property="article:tag" content="go">
+<meta property="article:tag" content="kubernetes">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://vizee.org/2022/05/01/go-ci-cd-using-ko/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://vizee.org/2022/05/01/go-ci-cd-using-ko/","path":"2022/05/01/go-ci-cd-using-ko/","title":"在 Go CI/CD 中使用 ko"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>在 Go CI/CD 中使用 ko | /vizee</title>
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">/vizee</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ko"><span class="nav-number">2.</span> <span class="nav-text">ko</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#GitLab-CI-CD-%E9%9B%86%E6%88%90"><span class="nav-number">3.</span> <span class="nav-text">GitLab CI&#x2F;CD 集成</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Github-Actions-%E9%9B%86%E6%88%90"><span class="nav-number">4.</span> <span class="nav-text">Github Actions 集成</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%BF%99%E6%98%AF%E7%BB%93%E5%B0%BE"><span class="nav-number">5.</span> <span class="nav-text">这是结尾</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">6.</span> <span class="nav-text">参考</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">vizee</p>
+  <div class="site-description" itemprop="description">vegetable is zombie evilest enemy</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">53</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/vizee" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;vizee" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll site-overview-item animated">
+    <div class="links-of-blogroll-title"><i class="fa fa-globe fa-fw"></i>
+      传送门
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://kingsamchen.github.io/" title="https:&#x2F;&#x2F;kingsamchen.github.io" rel="noopener" target="_blank">KC</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://powman.org/" title="https:&#x2F;&#x2F;powman.org" rel="noopener" target="_blank">泡面</a>
+        </li>
+    </ul>
+  </div>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://vizee.org/2022/05/01/go-ci-cd-using-ko/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="vizee">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="/vizee">
+      <meta itemprop="description" content="vegetable is zombie evilest enemy">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="在 Go CI/CD 中使用 ko | /vizee">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          在 Go CI/CD 中使用 ko
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-05-01 16:00:49" itemprop="dateCreated datePublished" datetime="2022-05-01T16:00:49+08:00">2022-05-01</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2023-02-21 21:02:53" itemprop="dateModified" datetime="2023-02-21T21:02:53+08:00">2023-02-21</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>Go 项目用的是 GitLab CI/CD + Kubernetes 执行器。之前一直有点慢，最近用 ko 优化了一下流程，记录一下。</p>
+<span id="more"></span>
+
+<p>CD 要打包容器镜像并且推送到镜像仓库，因为用的是 Kubernetes 执行器，没办法直接使用机器上的 docker，GitLab 官方给的方案有 dood，dind 和 kaniko。</p>
+<ul>
+<li>dood 简单理解就是暴露主机的 docker daemon 给容器内的 docker client，但这是非常具有风险的。</li>
+<li>dind 每次会额外启动一个容器运行 docker daemon，dind 容器通过容器网络 link 访问 docker daemon，但是 docker 需要运行在特权环境下。</li>
+<li>kaniko 解决了 dind 需要特权模式的问题，支持完整的 Dockerfile 命令，并且有丰富的定制选项，是比较推荐的方式之一。</li>
+<li>GitLab 里还提到了一个工具叫 buildah，buildah <strong>类似</strong> kaniko，主要用于构建 OCI 镜像，但也能支持 docker 镜像。</li>
+</ul>
+<p>kaniko 是我项目之前在用的方案。我的使用场景里，先是做了一个构建环境镜像 builder，包含了 go 和大仓项目依赖的包，镜像大概是 800+MB，GitLab CI 时启动镜像是 <code>gcr.io/kaniko-project/executor:debug</code>，再由 kaniko 执行 Dockerfile，拉取 builder 镜像，执行构建脚本，最后推送镜像。整个流程中最大的问题就是（故意）没有配置 Caching，每次启动都会重新拉取 builder，虽然是在 VPC 网络内拉取，整个过程还是会花费不少时间。还有一些额外的问题，比如我发现在用 multi-stage builds 的时候，filesystem 会 resolve 不止一次。</p>
+<h1 id="ko"><a href="#ko" class="headerlink" title="ko"></a>ko</h1><p>无意中发现了 ko 这个项目，功能非常契合我的需求，所以决定用 ko 替换 kaniko。</p>
+<p>我主要用到的是 ko build，这个命令的功能是：</p>
+<ul>
+<li>支持部分 goreleaser 的配置选项，通过配置构建二进制文件</li>
+<li>拉取一个镜像作为基础镜像，简单地将二进制文件和资源文件放到对应的目录，输出一个新镜像，</li>
+<li>通过选项配置推送镜像到 <code>KO_DOCKER_REPO</code> 指定的镜像仓库</li>
+</ul>
+<p>命令参数里需要特别注意的是 <code>--sbom</code> 选项，各个云平台的镜像仓库实现不同，如果无法正常推送，那你可能需要考虑把 <code>--sbom</code> 指定为 <code>none</code>。</p>
+<p>详细 build 命令文档参考<a target="_blank" rel="noopener" href="https://github.com/google/ko/blob/main/doc/ko_build.md">传送门</a></p>
+<p>ko 会从环境变量 <code>KO_CONFIG_PATH</code> 或工作目录下的 <code>.ko.yaml</code> 加载配置</p>
+<p><code>.ko.yaml</code> 例子：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">defaultBaseImage:</span> <span class="string">gcr.io/distroless/static:nonroot</span></span><br><span class="line"><span class="attr">builds:</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">id:</span> <span class="string">demo</span></span><br><span class="line">  <span class="attr">dir:</span> <span class="string">./app/demo</span></span><br><span class="line">  <span class="attr">env:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">CGO_ENABLED=1</span></span><br><span class="line">  <span class="attr">flags:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">-trimpath</span></span><br><span class="line">  <span class="attr">ldflags:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">-X</span> <span class="string">pkg/build.buildid=&#123;&#123;.Env.BUILD_ID&#125;&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>由 ko 构建的镜像有两个点要注意：</p>
+<ul>
+<li>二进制文件会被放在 /ko-app 下，例如 /ko-app/demo，/ko-app 目录已经被添加到 PATH</li>
+<li>如果构建目录下有名为 kodata 的目录，那么 kodata 目录中的文件也会被复制到镜像里，容器内应用通过 <code>KO_DATA_PATH</code> 环境变量获得 kodata 路径（大概是 /var/run/ko）</li>
+</ul>
+<h1 id="GitLab-CI-CD-集成"><a href="#GitLab-CI-CD-集成" class="headerlink" title="GitLab CI/CD 集成"></a>GitLab CI/CD 集成</h1><p>很重要的一个改变是配置 .gitlab-ci.yml 启动为 builder，但是在这之前我需要把 ko 二进制添加进 builder 镜像。制作 builder 镜像没有环境限制，可以轻松地在 docker build 环节把从二进制直接 ADD 到镜像或者在 builder 镜像构建时直接用 <code>go install github.com/google/ko@latest</code> 直接从源码构建（不要忘记 builder 有 go 环境），构建完成后需要 <code>go clean -modcache</code>。启动镜像是 builder 的优势不仅仅是少了一层镜像的启动，大部分时候 Runner 拉取过的镜像都会保留在 host 上，所以进一步节省了拉取镜像的耗时。</p>
+<p>最后在大仓里配置好 .ko.yaml，然后只要在构建脚本中执行 <code>ko build &lt;各种参数&gt; &lt;构建目录&gt;</code> 即可。</p>
+<p><code>.gitlab-ci.yml</code> 例子:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">build:</span></span><br><span class="line">  <span class="attr">stage:</span> <span class="string">build</span></span><br><span class="line">  <span class="attr">cache:</span> &#123;&#125;</span><br><span class="line">  <span class="attr">image:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">my.registry/go/builder:latest</span></span><br><span class="line">    <span class="attr">entrypoint:</span> [<span class="string">&quot;&quot;</span>]</span><br><span class="line">  <span class="attr">script:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">cd</span> <span class="string">$CI_PROJECT_DIR</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">echo</span> <span class="string">&quot;$CI_REG_PWD&quot;</span> <span class="string">|</span> <span class="string">ko</span> <span class="string">login</span> <span class="string">https://my.registry</span> <span class="string">--username</span> <span class="string">$CI_REG_USER</span> <span class="string">--password-stdin</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">export</span> <span class="string">KO_DOCKER_REPO=my.registry/go</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">ko</span> <span class="string">build</span> <span class="string">./app/demo</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="Github-Actions-集成"><a href="#Github-Actions-集成" class="headerlink" title="Github Actions 集成"></a>Github Actions 集成</h1><p>Github Actions 中集成更加简单，你可以用现成的 <a target="_blank" rel="noopener" href="https://github.com/imjasonh/setup-ko">imjasonh/setup-ko</a></p>
+<p><code>.github/workflows/ko-build.yml</code> 例子：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">build</span></span><br><span class="line"></span><br><span class="line"><span class="attr">on:</span></span><br><span class="line">  <span class="attr">push:</span></span><br><span class="line">    <span class="attr">branches:</span> [ <span class="string">main</span> ]</span><br><span class="line"></span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">build:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">env:</span></span><br><span class="line">      <span class="attr">KO_DOCKER_REPO:</span> <span class="string">my.registry/go</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/setup-go@v3</span></span><br><span class="line">      <span class="attr">with:</span></span><br><span class="line">        <span class="attr">go-version:</span> <span class="number">1.18</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">imjasonh/setup-ko@v0.4</span></span><br><span class="line">      <span class="attr">with:</span></span><br><span class="line">        <span class="attr">version:</span> <span class="string">latest-release</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/checkout@v3</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">env:</span></span><br><span class="line">        <span class="attr">CI_REG_USER:</span> <span class="string">my-user</span></span><br><span class="line">        <span class="attr">CI_REG_PWD:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.ci_reg_pwd</span> <span class="string">&#125;&#125;</span></span><br><span class="line">      <span class="attr">run:</span> <span class="string">|</span></span><br><span class="line"><span class="string">        echo &quot;$CI_REG_PWD&quot; | ko login https://my.registry --username $CI_REG_USER --password-stdin</span></span><br><span class="line"><span class="string">        ko build ./app/demo</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="这是结尾"><a href="#这是结尾" class="headerlink" title="这是结尾"></a>这是结尾</h1><p>在这次把 kaniko 改成 ko 后，平均构建耗时从 1m30s 降到了 22s，而且避免了不必要的网络流量和文件系统扫描，效果非常满意。</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://docs.gitlab.com/runner/executors/kubernetes.html">The Kubernetes executor for GitLab Runner</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.gitlab.com/ee/ci/docker/using_kaniko.html">Use kaniko to build Docker images</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/GoogleContainerTools/kaniko">GoogleContainerTools/kaniko</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/containers/buildah">containers/buildah</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/google/ko">google/ko</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/go/" rel="tag"># go</a>
+              <a href="/tags/kubernetes/" rel="tag"># kubernetes</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2022/04/03/neovim-lua-config/" rel="prev" title="使用 lua 配置 neovim">
+                  <i class="fa fa-chevron-left"></i> 使用 lua 配置 neovim
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2022/05/03/kubernetes-go-client-ssa/" rel="next" title="通过 Kubernetes Go Client 实现 SSA">
+                  通过 Kubernetes Go Client 实现 SSA <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">vizee</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://unpkg.com/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

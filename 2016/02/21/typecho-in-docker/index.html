@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 5.4.1">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://unpkg.com/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"vizee.org","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.11.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="0x0 总之前的博客使用 wordpress, 非常优秀且功能丰富的一个博客平台, 但是对我来说太庞大了, 因此在一堆原因促使下, 我选择了一款比较轻量的博客平台 typecho, 并且使用 docker 构建, 以方便部署. 传送门: github">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Typecho in Docker">
+<meta property="og:url" content="https://vizee.org/2016/02/21/typecho-in-docker/index.html">
+<meta property="og:site_name" content="&#x2F;vizee">
+<meta property="og:description" content="0x0 总之前的博客使用 wordpress, 非常优秀且功能丰富的一个博客平台, 但是对我来说太庞大了, 因此在一堆原因促使下, 我选择了一款比较轻量的博客平台 typecho, 并且使用 docker 构建, 以方便部署. 传送门: github">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2016-02-21T05:53:00.000Z">
+<meta property="article:modified_time" content="2023-02-21T13:02:53.767Z">
+<meta property="article:author" content="vizee">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://vizee.org/2016/02/21/typecho-in-docker/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://vizee.org/2016/02/21/typecho-in-docker/","path":"2016/02/21/typecho-in-docker/","title":"Typecho in Docker"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Typecho in Docker | /vizee</title>
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">/vizee</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#0x0-%E6%80%BB"><span class="nav-number">1.</span> <span class="nav-text">0x0 总</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x1-%E5%9F%BA%E7%A1%80%E7%8E%AF%E5%A2%83"><span class="nav-number">2.</span> <span class="nav-text">0x1 基础环境</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85-docker"><span class="nav-number">2.1.</span> <span class="nav-text">安装 docker</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85-docker-compose"><span class="nav-number">2.2.</span> <span class="nav-text">安装 docker-compose</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x2-%E6%9E%84%E5%BB%BA-typecho-%E9%95%9C%E5%83%8F"><span class="nav-number">3.</span> <span class="nav-text">0x2 构建 typecho 镜像</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E4%B8%8B%E8%BD%BD-typecho-docker"><span class="nav-number">3.1.</span> <span class="nav-text">1. 下载 typecho-docker</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E6%A0%B9%E6%8D%AE%E9%9C%80%E8%A6%81%E9%85%8D%E7%BD%AE-typecho"><span class="nav-number">3.2.</span> <span class="nav-text">2. 根据需要配置 typecho</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E6%9E%84%E5%BB%BA%E5%B9%B6%E5%90%AF%E5%8A%A8"><span class="nav-number">3.3.</span> <span class="nav-text">3. 构建并启动</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x3-%E6%B2%A1%E4%BA%86"><span class="nav-number">4.</span> <span class="nav-text">0x3 没了</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">vizee</p>
+  <div class="site-description" itemprop="description">vegetable is zombie evilest enemy</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">53</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/vizee" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;vizee" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll site-overview-item animated">
+    <div class="links-of-blogroll-title"><i class="fa fa-globe fa-fw"></i>
+      传送门
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://kingsamchen.github.io/" title="https:&#x2F;&#x2F;kingsamchen.github.io" rel="noopener" target="_blank">KC</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://powman.org/" title="https:&#x2F;&#x2F;powman.org" rel="noopener" target="_blank">泡面</a>
+        </li>
+    </ul>
+  </div>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://vizee.org/2016/02/21/typecho-in-docker/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="vizee">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="/vizee">
+      <meta itemprop="description" content="vegetable is zombie evilest enemy">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Typecho in Docker | /vizee">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Typecho in Docker
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2016-02-21 13:53:00" itemprop="dateCreated datePublished" datetime="2016-02-21T13:53:00+08:00">2016-02-21</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2023-02-21 21:02:53" itemprop="dateModified" datetime="2023-02-21T21:02:53+08:00">2023-02-21</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="0x0-总"><a href="#0x0-总" class="headerlink" title="0x0 总"></a>0x0 总</h1><p>之前的博客使用 wordpress, 非常优秀且功能丰富的一个博客平台, 但是对我来说太庞大了, 因此在一堆原因促使下, 我选择了一款比较轻量的博客平台 <a target="_blank" rel="noopener" href="http://typecho.org/">typecho</a>, 并且使用 docker 构建, 以方便部署.</p>
+<p>传送门: <a target="_blank" rel="noopener" href="https://github.com/vizee/typecho-docker">github</a></p>
+<span id="more"></span>
+
+<h1 id="0x1-基础环境"><a href="#0x1-基础环境" class="headerlink" title="0x1 基础环境"></a>0x1 基础环境</h1><p>构建 typecho-docker 依赖以下组件 (假设操作系统为 ubuntu-15.10-x86_64)</p>
+<ul>
+<li>git</li>
+<li>docker</li>
+<li>docker-compose</li>
+</ul>
+<h2 id="安装-docker"><a href="#安装-docker" class="headerlink" title="安装 docker"></a>安装 docker</h2><p>安装 docker 并且添加当前用户到 docker 组</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install -y docker.io</span><br><span class="line">sudo gpasswd -a $USER docker</span><br><span class="line">sudo service docker restart</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装-docker-compose"><a href="#安装-docker-compose" class="headerlink" title="安装 docker-compose"></a>安装 docker-compose</h2><p>有两种方法:</p>
+<ol>
+<li><p>从 github 下载</p>
+</li>
+<li><p>首先要检查 docker 版本</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker --version</span><br></pre></td></tr></table></figure>
+<p>我这里是 1.6.x, 所以从 docker-compose 的 <a target="_blank" rel="noopener" href="https://github.com/docker/compose/releases">release</a> 中找到适用于对应版本的 docker-compose 1.3.3, 使用 curl 下载</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">curl -L https://github.com/docker/compose/releases/download/1.3.3/docker-compose-`uname -s`-`uname -m` &gt; ~/bin/docker-compose</span><br><span class="line">chmod a+x ~/bin/docker-compose</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>从 pip 安装</p>
+</li>
+<li><p>首先需要本机安装 pip</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install python-pip</span><br></pre></td></tr></table></figure>
+<p>同上检查 docker 版本, 并且找到适用于对应版本的 docker-compose, 使用 pip 安装</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install -U docker-compose==对应版本号</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<p>安装完成后执行</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker-compose --version</span><br></pre></td></tr></table></figure>
+<p>确认安装结果</p>
+<h1 id="0x2-构建-typecho-镜像"><a href="#0x2-构建-typecho-镜像" class="headerlink" title="0x2 构建 typecho 镜像"></a>0x2 构建 typecho 镜像</h1><h2 id="1-下载-typecho-docker"><a href="#1-下载-typecho-docker" class="headerlink" title="1. 下载 typecho-docker"></a>1. 下载 typecho-docker</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install -y git</span><br><span class="line">git clone https://github.com/vizee/typecho-docker dockerfiles/typecho</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-根据需要配置-typecho"><a href="#2-根据需要配置-typecho" class="headerlink" title="2. 根据需要配置 typecho"></a>2. 根据需要配置 typecho</h2><p>具体参考 <code>dockerfiles/typecho/README.md</code></p>
+<h2 id="3-构建并启动"><a href="#3-构建并启动" class="headerlink" title="3. 构建并启动"></a>3. 构建并启动</h2><p>(因为我偷懒把 build 和 up 都写进 build.sh 脚本了, 理当只 build 就够)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd dockerfiles/typecho</span><br><span class="line">./build.sh</span><br></pre></td></tr></table></figure>
+
+<h1 id="0x3-没了"><a href="#0x3-没了" class="headerlink" title="0x3 没了"></a>0x3 没了</h1><p>docker 以及其 toolbox 还是有很多的好玩的东西, 下次争取把安装 docker 环境改为使用 docker-machine</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2015/12/28/convert-markdown-to-sql/" rel="prev" title="convert markdown to sql">
+                  <i class="fa fa-chevron-left"></i> convert markdown to sql
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2016/03/06/cli-options-parser/" rel="next" title="cli options parser">
+                  cli options parser <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">vizee</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://unpkg.com/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 5.4.1">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://unpkg.com/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"vizee.org","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.11.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="更新 K8s 对象在 K8s 更新资源操作有两种形式：Replace 和 Patch。 Replace 形式主要用于替换对象 spec，这是一个 read-then-write 操作，即你要先从 K8s 获取对象，修改 spec，再提交更新。这个过程中对象其他字段不需要特意维护，提交的 apiVersion、kind 和 metadata 中提供的信息会用于确定对象，而 status 则会被 K8">
+<meta property="og:type" content="article">
+<meta property="og:title" content="通过 Kubernetes Go Client 实现 SSA">
+<meta property="og:url" content="https://vizee.org/2022/05/03/kubernetes-go-client-ssa/index.html">
+<meta property="og:site_name" content="&#x2F;vizee">
+<meta property="og:description" content="更新 K8s 对象在 K8s 更新资源操作有两种形式：Replace 和 Patch。 Replace 形式主要用于替换对象 spec，这是一个 read-then-write 操作，即你要先从 K8s 获取对象，修改 spec，再提交更新。这个过程中对象其他字段不需要特意维护，提交的 apiVersion、kind 和 metadata 中提供的信息会用于确定对象，而 status 则会被 K8">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-05-02T19:02:03.000Z">
+<meta property="article:modified_time" content="2023-02-21T13:02:53.764Z">
+<meta property="article:author" content="vizee">
+<meta property="article:tag" content="go">
+<meta property="article:tag" content="kubernetes">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://vizee.org/2022/05/03/kubernetes-go-client-ssa/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://vizee.org/2022/05/03/kubernetes-go-client-ssa/","path":"2022/05/03/kubernetes-go-client-ssa/","title":"通过 Kubernetes Go Client 实现 SSA"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>通过 Kubernetes Go Client 实现 SSA | /vizee</title>
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">/vizee</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0-K8s-%E5%AF%B9%E8%B1%A1"><span class="nav-number">1.</span> <span class="nav-text">更新 K8s 对象</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Patch-%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.1.</span> <span class="nav-text">Patch 类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Server-Side-Apply"><span class="nav-number">1.2.</span> <span class="nav-text">Server-Side Apply</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%80%9A%E8%BF%87-k8s-io-client-go-%E5%AE%9E%E7%8E%B0-SSA"><span class="nav-number">2.</span> <span class="nav-text">通过 k8s.io&#x2F;client-go 实现 SSA</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#GVK-%E5%92%8C-GVR"><span class="nav-number">2.1.</span> <span class="nav-text">GVK 和 GVR</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dynamic-client-%E5%92%8C-unstructured"><span class="nav-number">2.2.</span> <span class="nav-text">dynamic client 和 unstructured</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%8C%E6%95%B4%E5%AE%9E%E7%8E%B0"><span class="nav-number">2.3.</span> <span class="nav-text">完整实现</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BB%93%E5%B0%BE"><span class="nav-number">3.</span> <span class="nav-text">结尾</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="nav-number">4.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">vizee</p>
+  <div class="site-description" itemprop="description">vegetable is zombie evilest enemy</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">53</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/vizee" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;vizee" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll site-overview-item animated">
+    <div class="links-of-blogroll-title"><i class="fa fa-globe fa-fw"></i>
+      传送门
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://kingsamchen.github.io/" title="https:&#x2F;&#x2F;kingsamchen.github.io" rel="noopener" target="_blank">KC</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://powman.org/" title="https:&#x2F;&#x2F;powman.org" rel="noopener" target="_blank">泡面</a>
+        </li>
+    </ul>
+  </div>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://vizee.org/2022/05/03/kubernetes-go-client-ssa/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="vizee">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="/vizee">
+      <meta itemprop="description" content="vegetable is zombie evilest enemy">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="通过 Kubernetes Go Client 实现 SSA | /vizee">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          通过 Kubernetes Go Client 实现 SSA
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-05-03 03:02:03" itemprop="dateCreated datePublished" datetime="2022-05-03T03:02:03+08:00">2022-05-03</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2023-02-21 21:02:53" itemprop="dateModified" datetime="2023-02-21T21:02:53+08:00">2023-02-21</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="更新-K8s-对象"><a href="#更新-K8s-对象" class="headerlink" title="更新 K8s 对象"></a>更新 K8s 对象</h1><p>在 K8s 更新资源操作有两种形式：Replace 和 Patch。</p>
+<p>Replace 形式主要用于替换对象 <code>spec</code>，这是一个 read-then-write 操作，即你要先从 K8s 获取对象，修改 <code>spec</code>，再提交更新。这个过程中对象其他字段不需要特意维护，提交的 <code>apiVersion</code>、<code>kind</code> 和 <code>metadata</code> 中提供的信息会用于确定对象，而 <code>status</code> 则会被 K8s 忽略（如果需要更新 <code>status</code>，需要用专用的操作）。</p>
+<p>在对象 <code>metadata</code> 中有一个 <code>resourceVersion</code> 字段，用来追踪持久化对象的变动，每次持久化对象发生变化时 <code>resourceVersion</code> 都会改变。Replace 隐含的竞争策略<strong>乐观锁</strong>就是依靠这个字段实现的，当操作被提交到 K8s 但 <code>resourceVersion</code> 不匹配时，操作会失败。</p>
+<p>Patch 操作直接在对象上修改指定的字段，并且通过 <em>Patch 类型</em>确定修改的方式（合并还是覆盖）。和 Replace 不同的是，Patch 操作竞争策略是 <strong>last-write-wins</strong>，这也意味着不需要先读取对象就可以修改对象。</p>
+<span id="more"></span>
+
+<h2 id="Patch-类型"><a href="#Patch-类型" class="headerlink" title="Patch 类型"></a>Patch 类型</h2><p>Patch 类型有 4 种：<em>JSON Patch</em>、<em>JSON Merge Patch</em>、<em>Strategic Merge Patch</em> 和 <em>Apply Patch</em>。</p>
+<ul>
+<li><em>Strategic Merge Patch</em> 根据各个字段预设的 Patch 策略（可以在 API 文档或者源码中发现 patchStrategy 字样内容）合并修改内容，是 <code>kubectl patch</code> 默认的 Patch 类型</li>
+<li><em>JSON Patch</em> 和 <em>JSON Merge Patch</em> 参考文章 <a target="_blank" rel="noopener" href="https://erosb.github.io/post/json-patch-vs-merge-patch/">JSON Patch and JSON Merge Patch</a></li>
+<li><em>Apply Patch</em> 指的就是 <em>Server-Side Apply</em></li>
+</ul>
+<blockquote>
+<p>官方文档 <a target="_blank" rel="noopener" href="https://kubernetes.io/docs/tasks/manage-kubernetes-objects/declarative-config/">Declarative Management of Kubernetes Objects Using Configuration Files</a> 描述了 kubectl 如何利用 <code>kubectl.kubernetes.io/last-applied-configuration</code> 实现 <em>Client-Side Apply</em>，这里不展开说明。</p>
+</blockquote>
+<h2 id="Server-Side-Apply"><a href="#Server-Side-Apply" class="headerlink" title="Server-Side Apply"></a>Server-Side Apply</h2><p>SSA(Server-Side Apply) 是在 K8s 1.22 GA 的特性，可以让控制器或者客户端在管理对象时只需要关注自己关心的字段，将对象改动的合并在服务端完成，并且（在 K8s 1.18 beta）引入 <em>Field Management</em> 机制，通过让字段所有权(ownership)和 <code>fieldManager</code> 关联的方式解决冲突，尤其当有多个控制器或者客户端管理同一个对象时，能尽量的避免冲突的发生。而当一个 <code>fieldManager</code> 尝试 apply 对象但有字段的所有权不属于自己时，操作就会冲突。</p>
+<p><em>Field Management</em> 满足以下规则：</p>
+<ul>
+<li>如果 apply 一个<strong>改动</strong>，则必须保证修改者已拥有字段所有权，否则操作冲突</li>
+<li>在同一个字段上 apply 相同的值（没有<strong>改动</strong>），字段所有权会被共享，共享后任何一个管理者改动字段都会冲突</li>
+<li>成功<strong>改动</strong>一个字段后字段所有权会被转移到修改者（包括 force SSA 和非 SSA 的 update 操作），其他 <code>fieldManager</code> 会被移除</li>
+<li>从 apply 的配置里移除已拥有所有权的字段会释放对应所有权，没有所有者的字段可能被移除或者重置为默认值</li>
+</ul>
+<p>字段所有权维护在 K8s 对象 <code>metadata.managedFields</code> 里，通常情况下不建议操作这个字段的内容，但是官方文档里也提到了你可以在需要的时候维护它。</p>
+<p>可以通过以下命令查看一个 Pod 的 <code>managedFields</code>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl get --show-managed-fields -o yaml pods &lt;pod-name&gt;</span><br></pre></td></tr></table></figure>
+
+<p>目前 kubectl 默认还是 client-side apply，如果你想尝试 SSA，可以通过 <code>kubectl apply --server-side</code>。</p>
+<h1 id="通过-k8s-io-client-go-实现-SSA"><a href="#通过-k8s-io-client-go-实现-SSA" class="headerlink" title="通过 k8s.io/client-go 实现 SSA"></a>通过 k8s.io/client-go 实现 SSA</h1><p>(写到这里，我已经没耐心写了。)</p>
+<h2 id="GVK-和-GVR"><a href="#GVK-和-GVR" class="headerlink" title="GVK 和 GVR"></a>GVK 和 GVR</h2><p>在 K8s 中，一个带命名空间的资源类型实例 URI 大概是这样的：<code>/apis/GROUP/VERSION/namespaces/NAMESPACE/RESOURCETYPE/NAME</code>，其中 <em>GROUP</em>、<em>VERSION</em>、<em>RESOURCETYPE</em> 合起来简称 <strong>GVR</strong>，用来标识<em>资源类型</em>，一个 GVR 要么是集群范围，要么是命名空间范围的。</p>
+<p>另一个概念叫 <strong>GVK</strong>，即 <em>Group</em>、<em>Version</em> 和 <em>Kind</em>，用于标识 <em>Kind</em>，例如 K8s 对象中的 <code>apiVersion</code> 和 <code>kind</code> 字段。</p>
+<p>GVK 和 GVR 存在一定映射关系，称为 <code>REST mapping</code>，可以通过命令 <code>kubectl api-resources</code> 查看。在使用客户端开发时，需要通过 <code>k8s.io/client-go/discovery</code> 和 <code>k8s.io/client-go/restmapper</code> 完成 GVK 和 GVR 相互映射。</p>
+<h2 id="dynamic-client-和-unstructured"><a href="#dynamic-client-和-unstructured" class="headerlink" title="dynamic client 和 unstructured"></a>dynamic client 和 unstructured</h2><p><code>k8s.io/client-go</code> 有两种风格的客户端，一种是 <code>k8s.io/client-go/kubernetes</code> 的 <code>Clientset</code>，通过结构化的方式访问 K8s API（可以在 <code>k8s.io/api</code> 中查看），在 <code>k8s.io/apimachinery</code> 中预设了大量资源对应对象的类型，并且 <em>Kind</em> 到 <em>Resource Type</em> 的映射也由客户端自己（手工）维护了，但这不符合 SSA 的场景；另一种就是 <code>k8s.io/client-go/dynamic</code> 提供的接口，这些接口使用了 <code>unstructured</code> 类型，通过动态的数据结构，可以灵活填充自己需要的数据。</p>
+<p>(我真的不知道这些东西有什么好说的)</p>
+<h2 id="完整实现"><a href="#完整实现" class="headerlink" title="完整实现"></a>完整实现</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;context&quot;</span></span><br><span class="line">	<span class="string">&quot;encoding/json&quot;</span></span><br><span class="line">	<span class="string">&quot;flag&quot;</span></span><br><span class="line">	<span class="string">&quot;os&quot;</span></span><br><span class="line">	<span class="string">&quot;time&quot;</span></span><br><span class="line"></span><br><span class="line">	<span class="string">&quot;k8s.io/apimachinery/pkg/api/meta&quot;</span></span><br><span class="line">	metav1 <span class="string">&quot;k8s.io/apimachinery/pkg/apis/meta/v1&quot;</span></span><br><span class="line">	<span class="string">&quot;k8s.io/apimachinery/pkg/apis/meta/v1/unstructured&quot;</span></span><br><span class="line">	<span class="string">&quot;k8s.io/apimachinery/pkg/runtime&quot;</span></span><br><span class="line">	<span class="string">&quot;k8s.io/apimachinery/pkg/runtime/schema&quot;</span></span><br><span class="line">	<span class="string">&quot;k8s.io/apimachinery/pkg/runtime/serializer/yaml&quot;</span></span><br><span class="line">	<span class="string">&quot;k8s.io/apimachinery/pkg/types&quot;</span></span><br><span class="line">	<span class="string">&quot;k8s.io/client-go/discovery&quot;</span></span><br><span class="line">	<span class="string">&quot;k8s.io/client-go/discovery/cached/memory&quot;</span></span><br><span class="line">	<span class="string">&quot;k8s.io/client-go/dynamic&quot;</span></span><br><span class="line">	<span class="string">&quot;k8s.io/client-go/restmapper&quot;</span></span><br><span class="line">	<span class="string">&quot;k8s.io/client-go/tools/clientcmd&quot;</span></span><br><span class="line">	<span class="string">&quot;k8s.io/klog/v2&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> kube <span class="keyword">struct</span> &#123;</span><br><span class="line">	di               dynamic.Interface</span><br><span class="line">	mapper           *restmapper.DeferredDiscoveryRESTMapper</span><br><span class="line">	fieldManagerName <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">geteResourseInterface</span><span class="params">(gvk *schema.GroupVersionKind, ns <span class="type">string</span>)</span></span> (dynamic.ResourceInterface, <span class="type">error</span>) &#123;</span><br><span class="line">	gvr, err := kube.mapper.RESTMapping(gvk.GroupKind(), gvk.Version)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">var</span> ri dynamic.ResourceInterface</span><br><span class="line">	<span class="keyword">if</span> gvr.Scope.Name() == meta.RESTScopeNameNamespace &#123;</span><br><span class="line">		ri = kube.di.Resource(gvr.Resource).Namespace(ns)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		ri = kube.di.Resource(gvr.Resource)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> ri, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">applyYaml</span><span class="params">(fname <span class="type">string</span>)</span></span> (*unstructured.Unstructured, <span class="type">error</span>) &#123;</span><br><span class="line">	data, err := os.ReadFile(fname)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line">	dec := yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)</span><br><span class="line">	<span class="keyword">var</span> obj unstructured.Unstructured</span><br><span class="line">	_, gvk, err := dec.Decode(data, <span class="literal">nil</span>, &amp;obj)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	err = unstructured.SetNestedField(obj.Object, time.Now().Format(time.RFC3339), <span class="string">&quot;spec&quot;</span>, <span class="string">&quot;template&quot;</span>, <span class="string">&quot;metadata&quot;</span>, <span class="string">&quot;annotations&quot;</span>, kube.fieldManagerName+<span class="string">&quot;/deployAt&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	objData, err := runtime.Encode(unstructured.UnstructuredJSONScheme, &amp;obj)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	ri, err := geteResourseInterface(gvk, obj.GetNamespace())</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	_, err = ri.Patch(context.Background(), obj.GetName(), types.ApplyPatchType, objData, metav1.PatchOptions&#123;</span><br><span class="line">		FieldManager: kube.fieldManagerName,</span><br><span class="line">	&#125;)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> &amp;obj, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">printObject</span><span class="params">(name <span class="type">string</span>)</span></span> <span class="type">error</span> &#123;</span><br><span class="line">	ri, err := geteResourseInterface(&amp;schema.GroupVersionKind&#123;Group: <span class="string">&quot;apps&quot;</span>, Version: <span class="string">&quot;v1&quot;</span>, Kind: <span class="string">&quot;Deployment&quot;</span>&#125;, <span class="string">&quot;default&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	obj, err := ri.Get(context.Background(), name, metav1.GetOptions&#123;&#125;)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	enc := json.NewEncoder(os.Stdout)</span><br><span class="line">	enc.SetIndent(<span class="string">&quot;&quot;</span>, <span class="string">&quot;  &quot;</span>)</span><br><span class="line">	enc.Encode(obj)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">assert</span><span class="params">(op <span class="type">string</span>, err <span class="type">error</span>)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		klog.Fatalf(<span class="string">&quot;%s: %v&quot;</span>, op, err)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> (</span><br><span class="line">		kubeConfig <span class="type">string</span></span><br><span class="line">		kubeMaster <span class="type">string</span></span><br><span class="line">		kubeFile   <span class="type">string</span></span><br><span class="line">	)</span><br><span class="line">	flag.StringVar(&amp;kubeConfig, <span class="string">&quot;kubeconfig&quot;</span>, <span class="string">&quot;kube-config.yaml&quot;</span>, <span class="string">&quot;k8s config file&quot;</span>)</span><br><span class="line">	flag.StringVar(&amp;kubeMaster, <span class="string">&quot;master&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="string">&quot;k8s master url&quot;</span>)</span><br><span class="line">	flag.StringVar(&amp;kube.fieldManagerName, <span class="string">&quot;fm&quot;</span>, <span class="string">&quot;app-deployer&quot;</span>, <span class="string">&quot;field manager&quot;</span>)</span><br><span class="line">	flag.StringVar(&amp;kubeFile, <span class="string">&quot;f&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="string">&quot;k8s resource yaml file&quot;</span>)</span><br><span class="line">	klog.InitFlags(flag.CommandLine)</span><br><span class="line">	flag.Parse()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> kubeFile == <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">		flag.Usage()</span><br><span class="line">		os.Exit(<span class="number">1</span>)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	cfg, err := clientcmd.BuildConfigFromFlags(kubeMaster, kubeConfig)</span><br><span class="line">	assert(<span class="string">&quot;clientcmd.BuildConfigFromFlags&quot;</span>, err)</span><br><span class="line"></span><br><span class="line">	klog.Infof(<span class="string">&quot;load config %s: host: %s&quot;</span>, kubeConfig, cfg.Host)</span><br><span class="line"></span><br><span class="line">	kube.di, err = dynamic.NewForConfig(cfg)</span><br><span class="line">	assert(<span class="string">&quot;dynamic.NewForConfig&quot;</span>, err)</span><br><span class="line"></span><br><span class="line">	dc, err := discovery.NewDiscoveryClientForConfig(cfg)</span><br><span class="line">	assert(<span class="string">&quot;discovery.NewDiscoveryClientForConfig&quot;</span>, err)</span><br><span class="line"></span><br><span class="line">	kube.mapper = restmapper.NewDeferredDiscoveryRESTMapper(memory.NewMemCacheClient(dc))</span><br><span class="line"></span><br><span class="line">	obj, err := applyYaml(kubeFile)</span><br><span class="line">	assert(<span class="string">&quot;applyYaml&quot;</span>, err)</span><br><span class="line"></span><br><span class="line">	klog.Infof(<span class="string">&quot;apply ok&quot;</span>)</span><br><span class="line"></span><br><span class="line">	err = printObject(obj.GetName())</span><br><span class="line">	assert(<span class="string">&quot;printObject&quot;</span>, err)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="结尾"><a href="#结尾" class="headerlink" title="结尾"></a>结尾</h1><p>在 K8s 里，一个 K8s 对象表示 <em>record of intent</em>，其中 <code>spec</code> 表示期望状态，<code>status</code> 表示当前状态，而 SSA 则是让多个控制器和客户端在一个 K8s 对象上只需要关注自己的 <em>fully specified intent</em>。</p>
+<p>大概就是这样。</p>
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><p>参考的官方文档来自 K8s v1.24。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects/">Understanding Kubernetes Objects</a></li>
+<li><a target="_blank" rel="noopener" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/">API reference</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.kubeclub.cn/kubernetes/122.html">kubernetes中update与patch的区别</a></li>
+<li><a target="_blank" rel="noopener" href="https://kubernetes.io/docs/reference/using-api/server-side-apply/">Server-Side Apply</a></li>
+<li><a target="_blank" rel="noopener" href="https://qingwave.github.io/k8s-unstructured-object/">K8S中为什么需要Unstructured对象</a></li>
+<li><a target="_blank" rel="noopener" href="https://ymmt2005.hatenablog.com/entry/2020/04/14/An_example_of_using_dynamic_client_of_k8s.io/client-go">An example of using dynamic client of k8s.io/client-go</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/go/" rel="tag"># go</a>
+              <a href="/tags/kubernetes/" rel="tag"># kubernetes</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2022/05/01/go-ci-cd-using-ko/" rel="prev" title="在 Go CI/CD 中使用 ko">
+                  <i class="fa fa-chevron-left"></i> 在 Go CI/CD 中使用 ko
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2022/09/05/using-dwm-on-manjaro/" rel="next" title="在 Manjaro 中使用 dwm">
+                  在 Manjaro 中使用 dwm <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">vizee</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://unpkg.com/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

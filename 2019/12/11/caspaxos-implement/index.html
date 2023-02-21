@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 5.4.1">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://unpkg.com/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"vizee.org","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.11.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="周末按照 CASPaxos 的论文尝试实现了一下这个算法，CASPaxos 算法本身没有什么困难的地方，Paxos + CAS，主要是算法上几个要点：  prepare&#x2F;accept 完全和 Paxos 一样，state+value 作为一个 Paxos 算法中的 value 传递。 对于一个空值，proposer choose value 和 Paxos 相同，对于一个非空值，proposer">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CASPaxos 实现">
+<meta property="og:url" content="https://vizee.org/2019/12/11/caspaxos-implement/index.html">
+<meta property="og:site_name" content="&#x2F;vizee">
+<meta property="og:description" content="周末按照 CASPaxos 的论文尝试实现了一下这个算法，CASPaxos 算法本身没有什么困难的地方，Paxos + CAS，主要是算法上几个要点：  prepare&#x2F;accept 完全和 Paxos 一样，state+value 作为一个 Paxos 算法中的 value 传递。 对于一个空值，proposer choose value 和 Paxos 相同，对于一个非空值，proposer">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-12-10T16:43:21.000Z">
+<meta property="article:modified_time" content="2023-02-21T13:02:53.764Z">
+<meta property="article:author" content="vizee">
+<meta property="article:tag" content="consensus">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://vizee.org/2019/12/11/caspaxos-implement/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://vizee.org/2019/12/11/caspaxos-implement/","path":"2019/12/11/caspaxos-implement/","title":"CASPaxos 实现"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>CASPaxos 实现 | /vizee</title>
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">/vizee</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0"><span class="nav-number">1.</span> <span class="nav-text">更新</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0"><span class="nav-number">2.</span> <span class="nav-text">实现</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">vizee</p>
+  <div class="site-description" itemprop="description">vegetable is zombie evilest enemy</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">53</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/vizee" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;vizee" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll site-overview-item animated">
+    <div class="links-of-blogroll-title"><i class="fa fa-globe fa-fw"></i>
+      传送门
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://kingsamchen.github.io/" title="https:&#x2F;&#x2F;kingsamchen.github.io" rel="noopener" target="_blank">KC</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://powman.org/" title="https:&#x2F;&#x2F;powman.org" rel="noopener" target="_blank">泡面</a>
+        </li>
+    </ul>
+  </div>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://vizee.org/2019/12/11/caspaxos-implement/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="vizee">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="/vizee">
+      <meta itemprop="description" content="vegetable is zombie evilest enemy">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="CASPaxos 实现 | /vizee">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          CASPaxos 实现
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2019-12-11 00:43:21" itemprop="dateCreated datePublished" datetime="2019-12-11T00:43:21+08:00">2019-12-11</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2023-02-21 21:02:53" itemprop="dateModified" datetime="2023-02-21T21:02:53+08:00">2023-02-21</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>周末按照 CASPaxos 的论文尝试实现了一下这个算法，CASPaxos 算法本身没有什么困难的地方，Paxos + CAS，主要是算法上几个要点：</p>
+<ol>
+<li>prepare/accept 完全和 Paxos 一样，state+value 作为一个 Paxos 算法中的 value 传递。</li>
+<li>对于一个空值，proposer choose value 和 Paxos 相同，对于一个非空值，proposer 认为 prepare 最终状态满足期望状态时，依然可以 choose value。</li>
+<li>新 value 成功写入后，不能认为新 value 就是当前状态的 value，必须有 read 操作才能确定。</li>
+<li>read 也要有 accept 步骤的，否则会脏读。</li>
+</ol>
+<span id="more"></span>
+
+<h1 id="更新"><a href="#更新" class="headerlink" title="更新"></a>更新</h1><p>感谢大佬 <a target="_blank" rel="noopener" href="https://github.com/drmingdrmer">drmingdrmer</a> 的<a target="_blank" rel="noopener" href="https://github.com/vizee/vizee.github.io/issues/2">指正</a>，主要是要保存和返回被接受的 ballotNum 而不是最后看见的 ballotNum</p>
+<h1 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;bytes&quot;</span></span><br><span class="line">	<span class="string">&quot;encoding/json&quot;</span></span><br><span class="line">	<span class="string">&quot;flag&quot;</span></span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;io/ioutil&quot;</span></span><br><span class="line">	<span class="string">&quot;log&quot;</span></span><br><span class="line">	<span class="string">&quot;net/http&quot;</span></span><br><span class="line">	<span class="string">&quot;os&quot;</span></span><br><span class="line">	<span class="string">&quot;strconv&quot;</span></span><br><span class="line">	<span class="string">&quot;strings&quot;</span></span><br><span class="line">	<span class="string">&quot;sync&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> ValueType <span class="keyword">struct</span> &#123;</span><br><span class="line">	Value <span class="type">int</span> <span class="string">`json:&quot;value&quot;`</span></span><br><span class="line">	State <span class="type">int</span> <span class="string">`json:&quot;state&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Proposer <span class="keyword">struct</span> &#123;</span><br><span class="line">	mu        sync.Mutex</span><br><span class="line">	ballotNum <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Acceptor <span class="keyword">struct</span> &#123;</span><br><span class="line">	mu        sync.Mutex</span><br><span class="line">	ballotNum <span class="type">int</span></span><br><span class="line">	vballot   <span class="type">int</span></span><br><span class="line">	value     *ValueType</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> self <span class="keyword">struct</span> &#123;</span><br><span class="line">	proposer  Proposer</span><br><span class="line">	acceptor  Acceptor</span><br><span class="line">	id        <span class="type">int</span></span><br><span class="line">	acceptors []<span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Prepare <span class="keyword">struct</span> &#123;</span><br><span class="line">	BallotNum <span class="type">int</span> <span class="string">`json:&quot;ballot_num&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Promise <span class="keyword">struct</span> &#123;</span><br><span class="line">	OK        <span class="type">bool</span>       <span class="string">`json:&quot;ok&quot;`</span></span><br><span class="line">	BallotNum <span class="type">int</span>        <span class="string">`json:&quot;ballot_num&quot;`</span></span><br><span class="line">	Value     *ValueType <span class="string">`json:&quot;value&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">onPrepare</span><span class="params">(args *Prepare)</span></span> *Promise &#123;</span><br><span class="line">	acceptor := &amp;self.acceptor</span><br><span class="line">	acceptor.mu.Lock()</span><br><span class="line">	<span class="keyword">defer</span> acceptor.mu.Unlock()</span><br><span class="line">	<span class="keyword">if</span> acceptor.ballotNum &gt; args.BallotNum &#123;</span><br><span class="line">		<span class="keyword">return</span> &amp;Promise&#123;</span><br><span class="line">			OK: <span class="literal">false</span>,</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	acceptor.ballotNum = args.BallotNum</span><br><span class="line">	<span class="keyword">return</span> &amp;Promise&#123;</span><br><span class="line">		OK:        <span class="literal">true</span>,</span><br><span class="line">		BallotNum: acceptor.vballot,</span><br><span class="line">		Value:     acceptor.value,</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Propose <span class="keyword">struct</span> &#123;</span><br><span class="line">	BallotNum <span class="type">int</span>        <span class="string">`json:&quot;ballot_num&quot;`</span></span><br><span class="line">	Value     *ValueType <span class="string">`json:&quot;value&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Accept <span class="keyword">struct</span> &#123;</span><br><span class="line">	OK <span class="type">bool</span> <span class="string">`json:&quot;ok&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">onAccept</span><span class="params">(args *Propose)</span></span> *Accept &#123;</span><br><span class="line">	acceptor := &amp;self.acceptor</span><br><span class="line">	acceptor.mu.Lock()</span><br><span class="line">	<span class="keyword">defer</span> acceptor.mu.Unlock()</span><br><span class="line">	<span class="keyword">if</span> acceptor.ballotNum &gt; args.BallotNum &#123;</span><br><span class="line">		<span class="keyword">return</span> &amp;Accept&#123;</span><br><span class="line">			OK: <span class="literal">false</span>,</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	acceptor.ballotNum = args.BallotNum</span><br><span class="line">	acceptor.vballot = args.BallotNum</span><br><span class="line">	acceptor.value = args.Value</span><br><span class="line">	<span class="keyword">return</span> &amp;Accept&#123;</span><br><span class="line">		OK: <span class="literal">true</span>,</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">invoke</span><span class="params">(node <span class="type">int</span>, method <span class="type">string</span>, args <span class="keyword">interface</span>&#123;&#125;, reply <span class="keyword">interface</span>&#123;&#125;)</span></span> <span class="type">error</span> &#123;</span><br><span class="line">	data, _ := json.Marshal(args)</span><br><span class="line">	resp, err := http.Post(self.acceptors[node]+method, <span class="string">&quot;application/json&quot;</span>, bytes.NewReader(data))</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	respBody, _ := ioutil.ReadAll(resp.Body)</span><br><span class="line">	<span class="keyword">if</span> resp.StatusCode != http.StatusOK &#123;</span><br><span class="line">		<span class="keyword">return</span> fmt.Errorf(<span class="string">&quot;%d %s&quot;</span>, resp.StatusCode, respBody)</span><br><span class="line">	&#125;</span><br><span class="line">	resp.Body.Close()</span><br><span class="line">	<span class="keyword">return</span> json.Unmarshal(respBody, reply)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">nextBallotNum</span><span class="params">()</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	proposer := &amp;self.proposer</span><br><span class="line">	proposer.mu.Lock()</span><br><span class="line">	proposer.ballotNum++</span><br><span class="line">	num := proposer.ballotNum</span><br><span class="line">	proposer.mu.Unlock()</span><br><span class="line">	<span class="keyword">return</span> num*<span class="number">100</span> + self.id</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">prepare</span><span class="params">(ballotNum <span class="type">int</span>)</span></span> (<span class="type">bool</span>, <span class="type">int</span>, *ValueType) &#123;</span><br><span class="line">	replys := <span class="built_in">make</span>(<span class="keyword">chan</span> *Promise, <span class="built_in">len</span>(self.acceptors))</span><br><span class="line">	<span class="keyword">for</span> i := <span class="keyword">range</span> self.acceptors &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(i <span class="type">int</span>)</span></span> &#123;</span><br><span class="line">			args := &amp;Prepare&#123;</span><br><span class="line">				BallotNum: ballotNum,</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">var</span> reply Promise</span><br><span class="line">			err := invoke(i, <span class="string">&quot;/paxos/prepare&quot;</span>, args, &amp;reply)</span><br><span class="line">			<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">				log.Printf(<span class="string">&quot;prepare %d: %v&quot;</span>, i, err)</span><br><span class="line">				replys &lt;- &amp;Promise&#123;</span><br><span class="line">					OK: <span class="literal">false</span>,</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">return</span></span><br><span class="line">			&#125;</span><br><span class="line">			log.Printf(<span class="string">&quot;prepare %d: %+v&quot;</span>, i, reply)</span><br><span class="line">			replys &lt;- &amp;reply</span><br><span class="line">		&#125;(i)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">var</span> value *ValueType</span><br><span class="line">	maxBallotNum := ballotNum</span><br><span class="line">	promised := <span class="number">0</span></span><br><span class="line">	n := <span class="built_in">len</span>(self.acceptors)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; n; i++ &#123;</span><br><span class="line">		reply := &lt;-replys</span><br><span class="line">		<span class="keyword">if</span> !reply.OK &#123;</span><br><span class="line">			<span class="keyword">continue</span></span><br><span class="line">		&#125;</span><br><span class="line">		promised++</span><br><span class="line">		<span class="keyword">if</span> reply.Value != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> value == <span class="literal">nil</span> &#123;</span><br><span class="line">				maxBallotNum = reply.BallotNum</span><br><span class="line">				value = reply.Value</span><br><span class="line">			&#125; <span class="keyword">else</span> <span class="keyword">if</span> reply.BallotNum &gt; maxBallotNum &#123;</span><br><span class="line">				maxBallotNum = reply.BallotNum</span><br><span class="line">				value = reply.Value</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> promised &lt; <span class="built_in">len</span>(self.acceptors)/<span class="number">2</span>+<span class="number">1</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>, <span class="number">0</span>, <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span>, maxBallotNum, value</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">accept</span><span class="params">(ballotNum <span class="type">int</span>, value *ValueType)</span></span> <span class="type">bool</span> &#123;</span><br><span class="line">	replys := <span class="built_in">make</span>(<span class="keyword">chan</span> *Accept, <span class="built_in">len</span>(self.acceptors))</span><br><span class="line">	<span class="keyword">for</span> i := <span class="keyword">range</span> self.acceptors &#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(i <span class="type">int</span>)</span></span> &#123;</span><br><span class="line">			args := &amp;Propose&#123;</span><br><span class="line">				BallotNum: ballotNum,</span><br><span class="line">				Value:     value,</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">var</span> reply Accept</span><br><span class="line">			err := invoke(i, <span class="string">&quot;/paxos/accept&quot;</span>, args, &amp;reply)</span><br><span class="line">			<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">				log.Printf(<span class="string">&quot;accept %d: %v&quot;</span>, i, err)</span><br><span class="line">				replys &lt;- &amp;Accept&#123;</span><br><span class="line">					OK: <span class="literal">false</span>,</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">return</span></span><br><span class="line">			&#125;</span><br><span class="line">			log.Printf(<span class="string">&quot;accept %d: %+v&quot;</span>, i, reply)</span><br><span class="line">			replys &lt;- &amp;reply</span><br><span class="line">		&#125;(i)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	accepted := <span class="number">0</span></span><br><span class="line">	n := <span class="built_in">len</span>(self.acceptors)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; n; i++ &#123;</span><br><span class="line">		reply := &lt;-replys</span><br><span class="line">		<span class="keyword">if</span> !reply.OK &#123;</span><br><span class="line">			<span class="keyword">continue</span></span><br><span class="line">		&#125;</span><br><span class="line">		accepted++</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> accepted &gt;= <span class="built_in">len</span>(self.acceptors)/<span class="number">2</span>+<span class="number">1</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">apply</span><span class="params">(state <span class="type">int</span>, val <span class="type">int</span>)</span></span> &#123;</span><br><span class="line">	log.Printf(<span class="string">&quot;apply: %d %d&quot;</span>, state, val)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">caspaxos</span><span class="params">(state <span class="type">int</span>, val <span class="type">int</span>)</span></span> (<span class="type">bool</span>, <span class="type">int</span>) &#123;</span><br><span class="line">	ballotNum := nextBallotNum()</span><br><span class="line">	ok, ballotNum, current := prepare(ballotNum)</span><br><span class="line">	<span class="keyword">if</span> !ok &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>, <span class="number">0</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">var</span> next *ValueType</span><br><span class="line">	<span class="keyword">if</span> current == <span class="literal">nil</span> &#123;</span><br><span class="line">		apply(<span class="number">0</span>, val)</span><br><span class="line">		next = &amp;ValueType&#123;</span><br><span class="line">			Value: val,</span><br><span class="line">			State: <span class="number">0</span>,</span><br><span class="line">		&#125;</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> state == current.State &#123;</span><br><span class="line">		apply(current.State+<span class="number">1</span>, val)</span><br><span class="line">		next = &amp;ValueType&#123;</span><br><span class="line">			Value: val,</span><br><span class="line">			State: current.State + <span class="number">1</span>,</span><br><span class="line">		&#125;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>, current.State</span><br><span class="line">	&#125;</span><br><span class="line">	ok = accept(ballotNum, next)</span><br><span class="line">	<span class="keyword">return</span> ok, next.State</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> (</span><br><span class="line">		id     <span class="type">int</span></span><br><span class="line">		listen <span class="type">string</span></span><br><span class="line">		nodes  <span class="type">string</span></span><br><span class="line">	)</span><br><span class="line">	flag.IntVar(&amp;id, <span class="string">&quot;i&quot;</span>, os.Getpid()%<span class="number">100</span>, <span class="string">&quot;id&quot;</span>)</span><br><span class="line">	flag.StringVar(&amp;listen, <span class="string">&quot;l&quot;</span>, <span class="string">&quot;:8000&quot;</span>, <span class="string">&quot;listen&quot;</span>)</span><br><span class="line">	flag.StringVar(&amp;nodes, <span class="string">&quot;n&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="string">&quot;nodes&quot;</span>)</span><br><span class="line">	flag.Parse()</span><br><span class="line"></span><br><span class="line">	self.id = id</span><br><span class="line">	<span class="keyword">if</span> nodes != <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">		self.acceptors = strings.Split(nodes, <span class="string">&quot;,&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	http.HandleFunc(<span class="string">&quot;/paxos/prepare&quot;</span>, <span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">		reqData, _ := ioutil.ReadAll(r.Body)</span><br><span class="line">		<span class="keyword">var</span> args Prepare</span><br><span class="line">		err := json.Unmarshal(reqData, &amp;args)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">		reply := onPrepare(&amp;args)</span><br><span class="line">		replyData, _ := json.Marshal(reply)</span><br><span class="line">		w.Write(replyData)</span><br><span class="line">	&#125;)</span><br><span class="line">	http.HandleFunc(<span class="string">&quot;/paxos/accept&quot;</span>, <span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">		reqData, _ := ioutil.ReadAll(r.Body)</span><br><span class="line">		<span class="keyword">var</span> args Propose</span><br><span class="line">		err := json.Unmarshal(reqData, &amp;args)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">		reply := onAccept(&amp;args)</span><br><span class="line">		replyData, _ := json.Marshal(reply)</span><br><span class="line">		w.Write(replyData)</span><br><span class="line">	&#125;)</span><br><span class="line">	http.HandleFunc(<span class="string">&quot;/submit&quot;</span>, <span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">		state, _ := strconv.Atoi(r.FormValue(<span class="string">&quot;state&quot;</span>))</span><br><span class="line">		val, _ := strconv.Atoi(r.FormValue(<span class="string">&quot;val&quot;</span>))</span><br><span class="line">		ok, state := caspaxos(state, val)</span><br><span class="line">		fmt.Fprintf(w, <span class="string">&quot;%t %d\n&quot;</span>, ok, state)</span><br><span class="line">	&#125;)</span><br><span class="line">	log.Fatalf(<span class="string">&quot;http: %v&quot;</span>, http.ListenAndServe(listen, <span class="literal">nil</span>))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/consensus/" rel="tag"># consensus</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2019/05/24/a-mysql-case/" rel="prev" title="一个 MySQL 问题">
+                  <i class="fa fa-chevron-left"></i> 一个 MySQL 问题
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/07/14/after-installing-linux-mint-20/" rel="next" title="Linux Mint 20 Xfce 上车后要做的一千零一件事情">
+                  Linux Mint 20 Xfce 上车后要做的一千零一件事情 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">vizee</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://unpkg.com/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
