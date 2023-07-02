@@ -126,12 +126,12 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">53</span>
+          <span class="site-state-item-count">55</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-count">8</span>
         <span class="site-state-item-name">标签</span>
       </div>
   </nav>
@@ -178,6 +178,235 @@
 
 
     <div class="main-inner index posts-expand">
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://vizee.org/2023/07/02/first-spring-boot-application/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="vizee">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="/vizee">
+      <meta itemprop="description" content="vegetable is zombie evilest enemy">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="undefined | /vizee">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2023/07/02/first-spring-boot-application/" class="post-title-link" itemprop="url">我的第一个 Spring Boot 应用</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2023-07-02 19:12:06 / 修改时间：19:13:43" itemprop="dateCreated datePublished" datetime="2023-07-02T19:12:06+08:00">2023-07-02</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h1 id="Spring-项目"><a href="#Spring-项目" class="headerlink" title="Spring 项目"></a>Spring 项目</h1><p>Spring 提供了一个网站 <a target="_blank" rel="noopener" href="https://start.spring.io/">Sping Initializr</a> 用来创建初始的 Spring 项目，这里按我需求选了 Maven 和 Java 17，然后顺手添加了 3 个依赖：Spring Data JPA、MySQL Driver，依赖在项目创建后随时都能修改。点击 <code>Generate</code> 生成项目代码。</p>
+<p>然后使用 IDEA 加载项目，这部分最好是能够提前配置一个镜像加速 Maven 下载依赖，配置镜像可以不用修改 Maven 自带的 settings.xml，可以在 <code>$HOME/.m2/settings.xml</code> 直接添加一个针对当前用户的配置文件或者在 mvn 中使用 <code>-s</code> 选项指定配置文件路径，这里可能需要注意的是，Maven 默认阻止 http 访问（你可以在 Maven 自带的 settings.xml 里看到相关配置），尽量使用 https 镜像仓库（或者删掉阻止规则？）。</p>
+<p>IDEA 加载项目后可以利用自带的 Maven 执行 <code>Package</code> 操作，完成后会在 target 目录下两个 jar 文件。一个是默认打出来（被重命名过）的 jar.original，如果没有 spring-boot-maven-plugin，那么这个是生成的目标文件，但是这个 jar 是没办法直接通过 <code>java -jar</code> 运行的，它只包含了项目代码中最基本的文件，不包含运行 jar 必要的元信息和依赖，你可以通过命令查看一个 jar 包中的文件列表，例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jar tf demo-0.0.1-SNAPSHOT.jar.original</span><br></pre></td></tr></table></figure>
+
+<p>spring-boot-maven-plugin 插件会对 jar 重新打包，重新打包后的 jar 文件里包含了必要的元信息和依赖 jar 文件。直接把 jar 文件打包进 jar 的做法叫 <em>jar in jar</em>，其实 Maven 有插件能够搜集所有依赖并解压，然后把所有 class 文件重新打包成一个 jar，这样打包结果会更加精简，打包过程中可以做一些适当的裁剪，但是会和一些机制产生冲突（以后会解释）。</p>
+<h1 id="Bean-和注解"><a href="#Bean-和注解" class="headerlink" title="Bean 和注解"></a>Bean 和注解</h1><p>软件工程的核心就是无尽的抽象，所以有这么一类 Java 对象叫 Bean。Spring 框架使用 IoC 管理 Bean，Bean 使用<strong>注解</strong>维护自身的作用和相互的关系，Spring 应用启动时会扫描 Java Package 下的 Bean，并且实例化。</p>
+<p>注解为 Java 代码提供元数据，Spring 运行时根据注解提供的信息扫描和实例化 Bean，比较常见的有 Component、Service、Repository、Controller、RequestMapping、Autowired、Resource、Configuration、Value。Component 表示这个 Bean 是 Spring 运行时需要关注的，其他用于修饰类的注解都会隐含 Component，例如 Service、Repository、Controller、Configuration。Autowired、Resource 和 Value 用来自动装配 Bean。</p>
+<h1 id="Controller-和-路由"><a href="#Controller-和-路由" class="headerlink" title="Controller 和 路由"></a>Controller 和 路由</h1><p>定义路由主要用到 Controller 和 RequestMapping，Controller 表示每个方法返回一个<strong>视图</strong>，RequestMapping 用于配置路由信息，例如</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Controller</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">HomeController</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@RequestMapping(&quot;/home&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">getHome</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;redirect:https://www.example.com/&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果想要 Controller 直接返回方法返回值对象或字符串作为 http response body，那么需要给类或者方法加上 <code>@ResponseBody</code>，可以使用 <code>@RestController</code> 注解，它等价于同时 <code>@Controller</code> 和 <code>@ResponseBody</code>。RequestMapping 注解默认不限制 http 方法，如果要指定方法可以用 <code>@RequestMapping(value = &quot;/home&quot;, method = RequestMethod.GET)</code> 的写法或者等价写法 <code>@GetMapping(&quot;/home&quot;)</code>。你还可以在类上增加 RequestMapping 注解来配置公共前缀：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="meta">@RequestMapping(&quot;/home&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">HomeController</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@GetMapping(&quot;/hello&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">hello</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;world&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Service-和-Repository"><a href="#Service-和-Repository" class="headerlink" title="Service 和 Repository"></a>Service 和 Repository</h1><p>通过一个书籍管理的例子来聊聊 Service 和 Repository 的使用。</p>
+<p>首先在 MySQL 建一个表，语句是用 Bard 生成的：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- bard: create mysql table for book, unique key isbn, created_at and updated_at time, named t_book</span></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> t_book (</span><br><span class="line">  id <span class="type">INT</span> AUTO_INCREMENT <span class="keyword">PRIMARY</span> KEY,</span><br><span class="line">  title <span class="type">VARCHAR</span>(<span class="number">255</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  author <span class="type">VARCHAR</span>(<span class="number">255</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  publisher <span class="type">VARCHAR</span>(<span class="number">255</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  publication_date <span class="type">DATE</span> <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  isbn <span class="type">VARCHAR</span>(<span class="number">13</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">UNIQUE</span>,</span><br><span class="line">  description TEXT,</span><br><span class="line">  cover_image <span class="type">VARCHAR</span>(<span class="number">255</span>),</span><br><span class="line">  created_at <span class="type">TIMESTAMP</span> <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="built_in">CURRENT_TIMESTAMP</span>,</span><br><span class="line">  updated_at <span class="type">TIMESTAMP</span> <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="built_in">CURRENT_TIMESTAMP</span> <span class="keyword">ON</span> <span class="keyword">UPDATE</span> <span class="built_in">CURRENT_TIMESTAMP</span></span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<h2 id="Entity"><a href="#Entity" class="headerlink" title="Entity"></a>Entity</h2><p>Entity 是 JPA 要用到的概念。根据 t_book 表创建对应的 Entity：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="meta">@Table(name = &quot;t_book&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Book</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Id</span></span><br><span class="line">    <span class="meta">@GeneratedValue(strategy = GenerationType.IDENTITY)</span></span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> id;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Column(name = &quot;publication_date&quot;, nullable = false)</span></span><br><span class="line">    <span class="keyword">private</span> Date publicationDate;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Column(nullable = false, unique = true)</span></span><br><span class="line">    <span class="keyword">private</span> String isbn;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Column(name = &quot;created_at&quot;, insertable = false, updatable = false)</span></span><br><span class="line">    <span class="keyword">private</span> Timestamp createdAt;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里涉及到了几个注解我简单解释一下：</p>
+<ul>
+<li>Entity 用来标记这是一个实体类，它和数据库的表、字段存在映射关系</li>
+<li>Table 用来提供更多信息，默认情况下表名来自于类名，但是 Book 对应的表为 t_book，所以需要手动指定</li>
+<li>Id 用来表示字段为一个数据库主键</li>
+<li>GeneratedValue 用来描述主键数据的生成方式，你可以配置策略或指定 generator<ul>
+<li>GenerationType.IDENTITY 表示主键的值来自于表的自增</li>
+</ul>
+</li>
+<li>Column 可以指定映射的字段名和一些修饰属性，在例子中的 created_at 和 updated_at 字段内容由数据库维护，所以我们需要屏蔽这些字段</li>
+</ul>
+<h2 id="Service"><a href="#Service" class="headerlink" title="Service"></a>Service</h2><p>项目中的 Service 用来实现业务，在 Java 里通常会定义一个 Service 接口例如 BookService，在 impl 包中定义 BookServiceImpl 类来实现接口，<code>@Service</code> 注解添加到 BookServiceImpl 上。BookController 通过下面方法访问 BookService</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Autowired</span></span><br><span class="line"><span class="keyword">private</span> BookService bookService;</span><br></pre></td></tr></table></figure>
+
+<p>这里不用去指定 BookServiceImpl，框架会自动找到接口对应的实现。</p>
+<p>Spring 框架会管理所有的 Bean，如果要访问这些 Bean，可以通过 Application context 的工厂去获取，但最简单的就是 Autowired 注解让 Spring 框架去注入对象，如果我没理解错的话，被管理的 Bean 不会被多次实例化。</p>
+<h2 id="Repository"><a href="#Repository" class="headerlink" title="Repository"></a>Repository</h2><p>Repository 是数据库访问的 Bean，在示例里我使用了 JPA 框架访问数据库，写法是</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Repository</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">BookRepository</span> <span class="keyword">extends</span> <span class="title class_">JpaRepository</span>&lt;Book, Integer&gt; &#123;</span><br><span class="line">    Book <span class="title function_">findByIsbn</span><span class="params">(String isbn)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>JpaRepository 中已经定义了大量基础的数据访问方法，但如果你需要增加额外的查询方式，例如代码中我需要根据 ISBN 查询书籍，只需要在接口里增加一个方法就行，JPA 会解析接口所有方法名，根据方法名（或者你的自定义注解）生成查询方法，创建对应的实例。</p>
+<h1 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h1><p>在 Spring Boot 项目中使用配置非常方便，既有 Autowired 自动装配，又能直接通过 Value 引入某个值。</p>
+<p>如果你需要自动装配，那么那个类需要有 Configuration 注解</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Data</span></span><br><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@ConfigurationProperties(prefix = &quot;app.home&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">HomeConfig</span> &#123;</span><br><span class="line">    String greeting;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>application.properties 文件中的</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">app.home.greeting=Hello</span><br></pre></td></tr></table></figure>
+
+<p>就能够自动装配使用配置。</p>
+<p>Value 相关的使用，我会在后面介绍 Nacos 部分一起提到。</p>
+<h1 id="日志"><a href="#日志" class="headerlink" title="日志"></a>日志</h1><p>Spring Boot 能自动适配主流日志库，默认情况下 spring-boot-starter-logging 使用 SLF4j 和 logback。</p>
+<p>SLF4j 是一个常用的日志门面库，并且会结合 lombok 提供的注解 <code>@Slf4j</code> 一起使用，有这个注解的类可以直接使用 log 变量访问日志接口：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Slf4j</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Main</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        log.info(<span class="string">&quot;&#123;&#125;&quot;</span>, args);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 Spring Boot 项目中配置 logback 需要在 resources 底下创建一个 logback-spring.xml 文件进行配置。聊聊输出 JSON 格式日志到文件。</p>
+<p>如果要用 JSON 格式一种就是使用 logback 的 LayoutWrappingEncoder，另一种是直接使用 logstash-logback-encoder。前者首先需要引入三个依赖</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.fasterxml.jackson.core<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>jackson-databind<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>2.15.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>ch.qos.logback.contrib<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>logback-jackson<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>0.1.5<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>ch.qos.logback.contrib<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>logback-json-classic<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>0.1.5<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>然后就是添加 logback-spring.xml 配置，encoder 使用 <code>ch.qos.logback.core.encoder.LayoutWrappingEncoder</code>，layout 使用 <code>ch.qos.logback.contrib.json.classic.JsonLayout</code>，formatter 使用 <code>ch.qos.logback.contrib.jackson.JacksonJsonFormatter</code>，完整配置查看 Github 上的代码。</p>
+<h1 id="Docker-CI-和部署"><a href="#Docker-CI-和部署" class="headerlink" title="Docker CI 和部署"></a>Docker CI 和部署</h1><p>Docker CI 和部署其实不复杂，唯一让我这个外行迷惑的是为什么会有这么多个版本的 JDK。不过根据我观察，eclipse-temurin 是目前比较好的版本，所以也是我优先原则的构建和运行环境。打包选择了 <code>maven:3.9-eclipse-temurin-17</code> 作为 builder stage，运行使用 <code>eclipse-temurin:17-jre-alpine</code>，162MB，算是比较小的选择。</p>
+<p>我在构建命令里指定了 settings.xml，会使用阿里云作为 maven mirror，只是为了作为一个示例。另外为了方便打包结果交付，最好还是配置一下 build.finalName。</p>
+<p>最后就是启动运行。打包时会把 resources 中的文件也合入 jar 包，但是线上环境必然不通，所以在启动时可以通过指定参数 <code>--spring.config.location=path/to/application.properties</code> 来指定一个外部的配置文件。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>因为机缘巧合，这次有机会简单尝试了 Java 的这套 Spring 框架，做为非 Java 开发者，所有内容都是我从网上东拼西凑的，在没有学习过的前提下只能理解这么多东西，难免内容有错误，我是真的不懂软件工程。相关代码我放 Github 上了：<a target="_blank" rel="noopener" href="https://github.com/vizee/java-demo/tree/main/spring-boot-demo">传送门</a>。</p>
+<p>你说的对，但这就是软件工程，明明什么都没说，就能水这么多字，一运行内存啊啊啊啊啊啊啊。</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://blog.51cto.com/maventalk/3169481">https://blog.51cto.com/maventalk/3169481</a></li>
+<li><a target="_blank" rel="noopener" href="https://juejin.cn/post/7114681674402627598">https://juejin.cn/post/7114681674402627598</a></li>
+<li><a target="_blank" rel="noopener" href="https://spring.io/guides/gs/accessing-data-jpa/">https://spring.io/guides/gs/accessing-data-jpa/</a></li>
+<li><a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000012322314">https://segmentfault.com/a/1190000012322314</a></li>
+<li><a target="_blank" rel="noopener" href="https://juejin.cn/post/7084879248980181005">https://juejin.cn/post/7084879248980181005</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.logging">https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.logging</a></li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://vizee.org/2023/03/28/nats-2.9-jetstream/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="vizee">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="/vizee">
+      <meta itemprop="description" content="vegetable is zombie evilest enemy">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="undefined | /vizee">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2023/03/28/nats-2.9-jetstream/" class="post-title-link" itemprop="url">NATS 2.9 JetStream</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-03-28 22:17:39" itemprop="dateCreated datePublished" datetime="2023-03-28T22:17:39+08:00">2023-03-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2023-07-02 17:15:37" itemprop="dateModified" datetime="2023-07-02T17:15:37+08:00">2023-07-02</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h1 id="从-STAN-说起"><a href="#从-STAN-说起" class="headerlink" title="从 STAN 说起"></a>从 STAN 说起</h1><p>去年本想水一篇关于 NATS JetStream 的博客，当时写了一部分，结果翻资料翻到一篇博客 <a target="_blank" rel="noopener" href="https://marco79423.net/articles/%E6%B7%BA%E8%AB%87-natsstan-%E5%92%8C-jetstream-%E5%85%A9%E4%B8%89%E4%BA%8B">淺談 NATS、STAN 和 JetStream 兩三事</a>，把我想说的基本都提到了，所以我当时弃坑了。最近用上了 NATS 2.9 版本，所以想着把新了解到的概念和之前想聊的一些内容都整理一下。如果你对 NATS 了解不多，非常推荐先看看我前面提到的那篇文章。</p>
+<p>在升到 NATS JetStream 之前，我一直在用 <a target="_blank" rel="noopener" href="https://docs.nats.io/legacy/stan/intro">STAN</a>（aka NATS Streaming）。STAN 是 NATS 上一代持久化方案，是一个独立的 Server，它内嵌了 NATS Server，在这之上构建了一个持久化层，并且支持集群，集群节点之间使用 Raft 算法。STAN 在使用上基本接近 NATS，但是有个别要注意的地方。</p>
+<p>一个是客户端连接时要提供 Cluster ID 和 Client ID。可以把 NATS 抽象看作 STAN 的网络层，客户端连入的是 NATS 的网络，访问这个网络上的 STAN Server，那么连接这个网络上的 Cluster 需要说明；Client ID 必须是唯一的，STAN 用 <em>Client ID 和 Durable Name</em> 区分 Consumer 持久化视图。</p>
+<p>还有一个比较重要的是断线重连问题，也是我们踩过的坑。基于前面提到的抽象理解，STAN 构建于 NATS 网络层之上，客户端实际上没有真正连接到 STAN Server，所以断线重连机制变得复杂。记得当时是阿里云网络波动，STAN 客户端集体掉线后没有恢复，造成了不小影响。后来我封装 stan.go 实现了一个支持重连的客户端，通过 <code>SetConnectionLostHandler</code> 在连接断开时创建新连接，并且支持在连接切换后恢复订阅。</p>
+<p>不过这些都不重要了，STAN 已经被标记为 deprecated，只维护到 2023.6。</p>
+<h1 id="JetStream"><a href="#JetStream" class="headerlink" title="JetStream"></a>JetStream</h1><p><a target="_blank" rel="noopener" href="https://docs.nats.io/nats-concepts/jetstream">JetStream</a> 是 NATS 2.2 开始内置的持久化机制，满足 At-Least-Once 语义，也提供了一些机制支持 Exactly-Once 语义。目前发展到 2.9.15 版本，已经很好用了。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/03/28/nats-2.9-jetstream/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
 
     
 
@@ -829,179 +1058,6 @@
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2020/07/14/after-installing-linux-mint-20/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://vizee.org/2019/12/11/caspaxos-implement/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="vizee">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="/vizee">
-      <meta itemprop="description" content="vegetable is zombie evilest enemy">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | /vizee">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2019/12/11/caspaxos-implement/" class="post-title-link" itemprop="url">CASPaxos 实现</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2019-12-11 00:43:21" itemprop="dateCreated datePublished" datetime="2019-12-11T00:43:21+08:00">2019-12-11</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2023-02-21 21:02:53" itemprop="dateModified" datetime="2023-02-21T21:02:53+08:00">2023-02-21</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>周末按照 CASPaxos 的论文尝试实现了一下这个算法，CASPaxos 算法本身没有什么困难的地方，Paxos + CAS，主要是算法上几个要点：</p>
-<ol>
-<li>prepare/accept 完全和 Paxos 一样，state+value 作为一个 Paxos 算法中的 value 传递。</li>
-<li>对于一个空值，proposer choose value 和 Paxos 相同，对于一个非空值，proposer 认为 prepare 最终状态满足期望状态时，依然可以 choose value。</li>
-<li>新 value 成功写入后，不能认为新 value 就是当前状态的 value，必须有 read 操作才能确定。</li>
-<li>read 也要有 accept 步骤的，否则会脏读。</li>
-</ol>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2019/12/11/caspaxos-implement/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://vizee.org/2019/05/24/a-mysql-case/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="vizee">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="/vizee">
-      <meta itemprop="description" content="vegetable is zombie evilest enemy">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | /vizee">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2019/05/24/a-mysql-case/" class="post-title-link" itemprop="url">一个 MySQL 问题</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2019-05-24 03:10:42" itemprop="dateCreated datePublished" datetime="2019-05-24T03:10:42+08:00">2019-05-24</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2023-02-21 21:02:53" itemprop="dateModified" datetime="2023-02-21T21:02:53+08:00">2023-02-21</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h1><p>存在一个 <code>orders</code> 表，有 <code>id</code>, <code>uid</code>, <code>gid</code> 三个字段，查询同时存在 <code>gid</code> 为 1 和 2 的 <code>uid</code>。</p>
-<p>这里给出了 3 条 sql 语句和相关 <code>EXPLAIN</code> 结果（结果我就不排版了）。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2019/05/24/a-mysql-case/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>

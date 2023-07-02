@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 5.4.1">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://unpkg.com/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"vizee.org","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.11.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="从 STAN 说起去年本想水一篇关于 NATS JetStream 的博客，当时写了一部分，结果翻资料翻到一篇博客 淺談 NATS、STAN 和 JetStream 兩三事，把我想说的基本都提到了，所以我当时弃坑了。最近用上了 NATS 2.9 版本，所以想着把新了解到的概念和之前想聊的一些内容都整理一下。如果你对 NATS 了解不多，非常推荐先看看我前面提到的那篇文章。 在升到 NATS Jet">
+<meta property="og:type" content="article">
+<meta property="og:title" content="NATS 2.9 JetStream">
+<meta property="og:url" content="https://vizee.org/2023/03/28/nats-2.9-jetstream/index.html">
+<meta property="og:site_name" content="&#x2F;vizee">
+<meta property="og:description" content="从 STAN 说起去年本想水一篇关于 NATS JetStream 的博客，当时写了一部分，结果翻资料翻到一篇博客 淺談 NATS、STAN 和 JetStream 兩三事，把我想说的基本都提到了，所以我当时弃坑了。最近用上了 NATS 2.9 版本，所以想着把新了解到的概念和之前想聊的一些内容都整理一下。如果你对 NATS 了解不多，非常推荐先看看我前面提到的那篇文章。 在升到 NATS Jet">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-03-28T14:17:39.000Z">
+<meta property="article:modified_time" content="2023-07-02T09:15:37.285Z">
+<meta property="article:author" content="vizee">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://vizee.org/2023/03/28/nats-2.9-jetstream/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://vizee.org/2023/03/28/nats-2.9-jetstream/","path":"2023/03/28/nats-2.9-jetstream/","title":"NATS 2.9 JetStream"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>NATS 2.9 JetStream | /vizee</title>
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">/vizee</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%8E-STAN-%E8%AF%B4%E8%B5%B7"><span class="nav-number">1.</span> <span class="nav-text">从 STAN 说起</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#JetStream"><span class="nav-number">2.</span> <span class="nav-text">JetStream</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Stream"><span class="nav-number">2.1.</span> <span class="nav-text">Stream</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Consumer-%E5%92%8C%E8%AE%A2%E9%98%85"><span class="nav-number">2.2.</span> <span class="nav-text">Consumer 和订阅</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Durable-%E5%92%8C-Ephemeral"><span class="nav-number">2.2.1.</span> <span class="nav-text">Durable 和 Ephemeral</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Push-based-%E5%92%8C-Pull-based"><span class="nav-number">2.2.2.</span> <span class="nav-text">Push-based 和 Pull-based</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Cluster"><span class="nav-number">2.3.</span> <span class="nav-text">Cluster</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Accounts"><span class="nav-number">2.4.</span> <span class="nav-text">Accounts</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Client"><span class="nav-number">2.5.</span> <span class="nav-text">Client</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9E%E6%8E%A5"><span class="nav-number">2.5.1.</span> <span class="nav-text">连接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#JetStream-1"><span class="nav-number">2.5.2.</span> <span class="nav-text">JetStream</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Pull-based-%E8%AE%A2%E9%98%85"><span class="nav-number">2.5.3.</span> <span class="nav-text">Pull-based 订阅</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%80%E5%87%BA"><span class="nav-number">2.5.4.</span> <span class="nav-text">退出</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Relevant-Links"><span class="nav-number">3.</span> <span class="nav-text">Relevant Links</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">vizee</p>
+  <div class="site-description" itemprop="description">vegetable is zombie evilest enemy</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">55</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/vizee" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;vizee" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll site-overview-item animated">
+    <div class="links-of-blogroll-title"><i class="fa fa-globe fa-fw"></i>
+      传送门
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://kingsamchen.github.io/" title="https:&#x2F;&#x2F;kingsamchen.github.io" rel="noopener" target="_blank">KC</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://powman.org/" title="https:&#x2F;&#x2F;powman.org" rel="noopener" target="_blank">泡面</a>
+        </li>
+    </ul>
+  </div>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://vizee.org/2023/03/28/nats-2.9-jetstream/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="vizee">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="/vizee">
+      <meta itemprop="description" content="vegetable is zombie evilest enemy">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="NATS 2.9 JetStream | /vizee">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          NATS 2.9 JetStream
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-03-28 22:17:39" itemprop="dateCreated datePublished" datetime="2023-03-28T22:17:39+08:00">2023-03-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2023-07-02 17:15:37" itemprop="dateModified" datetime="2023-07-02T17:15:37+08:00">2023-07-02</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="从-STAN-说起"><a href="#从-STAN-说起" class="headerlink" title="从 STAN 说起"></a>从 STAN 说起</h1><p>去年本想水一篇关于 NATS JetStream 的博客，当时写了一部分，结果翻资料翻到一篇博客 <a target="_blank" rel="noopener" href="https://marco79423.net/articles/%E6%B7%BA%E8%AB%87-natsstan-%E5%92%8C-jetstream-%E5%85%A9%E4%B8%89%E4%BA%8B">淺談 NATS、STAN 和 JetStream 兩三事</a>，把我想说的基本都提到了，所以我当时弃坑了。最近用上了 NATS 2.9 版本，所以想着把新了解到的概念和之前想聊的一些内容都整理一下。如果你对 NATS 了解不多，非常推荐先看看我前面提到的那篇文章。</p>
+<p>在升到 NATS JetStream 之前，我一直在用 <a target="_blank" rel="noopener" href="https://docs.nats.io/legacy/stan/intro">STAN</a>（aka NATS Streaming）。STAN 是 NATS 上一代持久化方案，是一个独立的 Server，它内嵌了 NATS Server，在这之上构建了一个持久化层，并且支持集群，集群节点之间使用 Raft 算法。STAN 在使用上基本接近 NATS，但是有个别要注意的地方。</p>
+<p>一个是客户端连接时要提供 Cluster ID 和 Client ID。可以把 NATS 抽象看作 STAN 的网络层，客户端连入的是 NATS 的网络，访问这个网络上的 STAN Server，那么连接这个网络上的 Cluster 需要说明；Client ID 必须是唯一的，STAN 用 <em>Client ID 和 Durable Name</em> 区分 Consumer 持久化视图。</p>
+<p>还有一个比较重要的是断线重连问题，也是我们踩过的坑。基于前面提到的抽象理解，STAN 构建于 NATS 网络层之上，客户端实际上没有真正连接到 STAN Server，所以断线重连机制变得复杂。记得当时是阿里云网络波动，STAN 客户端集体掉线后没有恢复，造成了不小影响。后来我封装 stan.go 实现了一个支持重连的客户端，通过 <code>SetConnectionLostHandler</code> 在连接断开时创建新连接，并且支持在连接切换后恢复订阅。</p>
+<p>不过这些都不重要了，STAN 已经被标记为 deprecated，只维护到 2023.6。</p>
+<h1 id="JetStream"><a href="#JetStream" class="headerlink" title="JetStream"></a>JetStream</h1><p><a target="_blank" rel="noopener" href="https://docs.nats.io/nats-concepts/jetstream">JetStream</a> 是 NATS 2.2 开始内置的持久化机制，满足 At-Least-Once 语义，也提供了一些机制支持 Exactly-Once 语义。目前发展到 2.9.15 版本，已经很好用了。</p>
+<span id="more"></span>
+
+<h2 id="Stream"><a href="#Stream" class="headerlink" title="Stream"></a>Stream</h2><p><a target="_blank" rel="noopener" href="https://docs.nats.io/nats-concepts/jetstream/streams">Stream</a> 是 JetStream 消息存储单元，在 Stream 配置消息的存储和管理规则，如果你熟悉 STAN Store 配置，会对 Stream 部分配置非常眼熟。挑几个配置谈谈我的理解：</p>
+<ul>
+<li>Subjects：Stream 和 Subject 命名没有联系，当发现消息的 Subject 如果和 Stream 关联，那么就会进入到 Stream 的消息存储中。在同一个 Stream 中的所有 Subject 共享一个 Stream 配额。</li>
+<li>Duplicate Window：消息重复窗口，配合 <code>Nats-Msg-Id</code> 可以保证窗口内消息不会重复投递。</li>
+<li>Retention Policy：<ul>
+<li><code>LimitsPolicy</code>：消息会一直保留，直到配额上限才会触发消息删除</li>
+<li><code>InterestPolicy</code>：在 <code>LimitsPolicy</code> 的前提下，消息在每个正在订阅的 Consumer 都消费后删除，如果没有 Consumer 立即删除消息</li>
+<li><code>WorkQueuePolicy</code>：在 <code>LimitsPolicy</code> 的前提下，消息在 Consumer 消费(Ack)后删除。同一个 Subject 最多只能有一个 Consumer</li>
+</ul>
+</li>
+<li>Discard Policy：<ul>
+<li><code>DiscardOld</code>：当消息到达配额上限时，优先丢弃旧消息</li>
+<li><code>DiscardNew</code>：当消息到达配额上限时，拒收新消息</li>
+<li><code>DiscardNewPerSubject</code>：2.9 的新特征，是一个拓展配置，按 Subject 执行 <code>DiscardNew</code> 策略。官方给了一个用法叫 <a target="_blank" rel="noopener" href="https://nats.io/blog/new-per-subject-discard-policy/">Infinite message deduplication</a>，不依赖 Duplicate Window 和 <code>Nats-Msg-Id</code>，结合 <em>Per Subject Messages Limit</em>（例如设为 1） 和 <code>DiscardNewPerSubject</code>，把 Subject 看作一个事务或者消息 ID，来保证不会重复投递。</li>
+</ul>
+</li>
+</ul>
+<h2 id="Consumer-和订阅"><a href="#Consumer-和订阅" class="headerlink" title="Consumer 和订阅"></a>Consumer 和订阅</h2><p><a target="_blank" rel="noopener" href="https://docs.nats.io/nats-concepts/jetstream/consumers">Consumer</a> 是订阅的状态视图。Consumer 维护消费配置，跟踪消息投递和 ACK，会影响到 Stream 是否能删除一条消息。Stream 从理解上也算订阅的单元，即 Consumer 创建一个订阅，关联一个 Stream，在上面过滤感兴趣的 Subject。</p>
+<p>Consumer 中比较重要的概念是 Durable/Ephemeral 和 Push-based/Pull-based 这两块。</p>
+<h3 id="Durable-和-Ephemeral"><a href="#Durable-和-Ephemeral" class="headerlink" title="Durable 和 Ephemeral"></a>Durable 和 Ephemeral</h3><p>Consumer 配置的 <code>Durable</code> 字段是空的话，这个 Consumer 就是一个 Ephemeral Consumer，这里实际上又涉及到另一个字段：<code>Name</code>。大致流程是这样的：如果 Consumer <code>Durable</code> 和 <code>Name</code> 都为空，NATS Server 会生成一个唯一的 name 作为 Ephemeral Consumer 的 <code>Name</code>，用作 Consumer 视图名，这个 <code>Name</code> 会在 Consumer 创建成功以后，返回给客户端。如果你查看 nats-server 代码，甚至会发现 <a target="_blank" rel="noopener" href="https://github.com/nats-io/nats-server/blob/v2.9.15/server/consumer.go#L57">Durable is deprecated.</a> 的注释。</p>
+<p>客户端正常退出（<em>Drain</em> 或者 <em>Unsubscribe</em>）的话，会主动在 Stream 上删除自己创建的 Consumer，但客户端故障退出后，新客户端会认为自己不是 Consumer 的创建者，它在退出时不会删除 Consumer，再然后如果客户端退出后永远不上线，那么 Consumer 会一直存在，只能通过手动删除的方式清除。</p>
+<p><code>InactiveThreshold</code> 配置允许一个 Consumer 一定时间不活跃一定时间后由 Server 清理不活跃 Consumer。在 2.9 版本之前，Ephemeral Consumer 和 Durable Consumer 有一个非常大的区别是只有 Ephemeral Consumer 支持 <code>InactiveThreshold</code>，如果 Ephemeral Consumer 没指定 <code>InactiveThreshold</code>，Server 也会为 Ephemeral Consumer 提供一个预设的值（目前 5s）。2.9 以后 Durable Consumer 也支持了这个配置，但是必须显式指定。</p>
+<h3 id="Push-based-和-Pull-based"><a href="#Push-based-和-Pull-based" class="headerlink" title="Push-based 和 Pull-based"></a>Push-based 和 Pull-based</h3><p>Push-based Consumer 和 NATS、STAN 的 Consumer 用法相同，Server 主动推送订阅的消息到客户端，Push-based Consumer 支持 queue，也就是 <code>DeliverGroup</code>。</p>
+<p>Pull-based Consumer 是 JetStream 新增的一个模式，模式上更接近其他 MQ 客户端用法。创建订阅后你需要主动拉取消息，消息必须手动 Ack，Pull 模式不支持 queue。</p>
+<p>具体配置参考文档，不多介绍。</p>
+<h2 id="Cluster"><a href="#Cluster" class="headerlink" title="Cluster"></a>Cluster</h2><p>NATS Server 拥有非常丰富的拓扑能力，这方面我不打算展开聊，想了解直接阅读文档 <a target="_blank" rel="noopener" href="https://docs.nats.io/nats-concepts/service_infrastructure/adaptive_edge_deployment">NATS Adaptive Deployment Architectures</a> 和 <a target="_blank" rel="noopener" href="https://docs.nats.io/running-a-nats-service/configuration/clustering/jetstream_clustering">JetStream Clustering</a>。我就简单聊聊集群配置。</p>
+<p>假设我有 3 个节点，那么我 nats-0 节点关于 cluster 的配置大概是这样的：</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">server_name</span>: <span class="string">&quot;dev-nats-0&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">cluster</span>: <span class="string">&#123;</span></span><br><span class="line">  <span class="attr">name</span>: <span class="string">&quot;dev&quot;</span></span><br><span class="line">  <span class="attr">listen</span>: <span class="string">&quot;:6222&quot;</span></span><br><span class="line">  <span class="attr">authorization</span> <span class="string">&#123;</span></span><br><span class="line">    <span class="attr">user</span>: <span class="string">replica</span></span><br><span class="line">    <span class="attr">password</span>: <span class="string">&quot;WC49PtzPF4Tcfpf3CwNfhbWMRM47Fxmb&quot;</span></span><br><span class="line">    <span class="attr">timeout</span>: <span class="string">1</span></span><br><span class="line">  <span class="attr">&#125;</span></span><br><span class="line">  <span class="attr">routes</span>: <span class="string">[</span></span><br><span class="line"><span class="comment">    # nats-route://replica:WC49PtzPF4Tcfpf3CwNfhbWMRM47Fxmb@nats-0:6222</span></span><br><span class="line">    <span class="attr">nats-route</span>:<span class="string">//replica:WC49PtzPF4Tcfpf3CwNfhbWMRM47Fxmb@nats-1:6222</span></span><br><span class="line">    <span class="attr">nats-route</span>:<span class="string">//replica:WC49PtzPF4Tcfpf3CwNfhbWMRM47Fxmb@nats-2:6222</span></span><br><span class="line">  <span class="attr">]</span></span><br><span class="line"><span class="attr">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>server_name</code> 是必须的，并且不能重复。</li>
+<li><code>cluster</code> 配置中<ul>
+<li>相同集群 <code>name</code> 必须相同</li>
+<li><code>authorization</code> 里的 <code>user</code> 如果都相同，<code>password</code> 必须也相同</li>
+<li><code>routes</code> 配置里关于自己节点的路由可以不配置，对 NATS Server 来说，这是集群的 member 表。节点之间会交换 <code>routes</code> 列表，并且会从中删除重复的项。如果启用了 JetStream，那么 <code>routes</code> 列表不能为空，否则 Server 不能启动。</li>
+</ul>
+</li>
+</ul>
+<p>顺便一提，在 Stream 中其实有几个配置是和 Cluster 相关的，例如目前有 Replicas、Placement</p>
+<h2 id="Accounts"><a href="#Accounts" class="headerlink" title="Accounts"></a>Accounts</h2><p><a target="_blank" rel="noopener" href="https://docs.nats.io/running-a-nats-service/configuration/securing_nats/accounts">Accounts</a> 是 NATS 关于多租户的能力。NATS 有一个默认的全局 Account，即 <code>$G</code>，如果仅配置了 <code>authorization</code>，登录到 Server 的客户端访问的是默认 Account。你可以在配置 <code>accounts</code> 启用多租户：</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">accounts</span>: <span class="string">&#123;</span></span><br><span class="line">  <span class="attr">biz_a</span>: <span class="string">&#123;</span></span><br><span class="line">    <span class="attr">jetstream</span>: <span class="string">enabled</span></span><br><span class="line">    <span class="attr">users</span>: <span class="string">[</span></span><br><span class="line">      <span class="attr">&#123;</span> <span class="string">user: &quot;a_user&quot;, password: &quot;CgqvKgzsM7qW9xbgknmvVhmdmHPJPznq&quot; &#125;</span></span><br><span class="line">    <span class="attr">]</span></span><br><span class="line">  <span class="attr">&#125;</span></span><br><span class="line">  <span class="attr">biz_b</span>: <span class="string">&#123;</span></span><br><span class="line">    <span class="attr">jetstream</span>: <span class="string">enabled</span></span><br><span class="line">    <span class="attr">users</span>: <span class="string">[</span></span><br><span class="line">      <span class="attr">&#123;</span> <span class="string">user: &quot;b_user&quot;, password: &quot;XpnLbc3VsbL9wgwcL7VVnpH3XssbnHwP&quot; &#125;</span></span><br><span class="line">    <span class="attr">]</span></span><br><span class="line">  <span class="attr">&#125;</span></span><br><span class="line"><span class="attr">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>只要客户端分别通过，<code>a_user</code> 和 <code>b_user</code> 登录，那么他们就会处于不同的 Account 空间，对同一个 Subject 的消息相互隔离。<code>jetstream</code> 可以是一个配置对象，针对不同的 Account 配置 JetStream 配额。</p>
+<p>Account 还提供了跨租户访问的能力，你可以声明导出你的 Subject 提供给其他 Account 导入，这里不再细说。</p>
+<h2 id="Client"><a href="#Client" class="headerlink" title="Client"></a>Client</h2><p>最后再聊聊客户端开发，我这里用的是 <a target="_blank" rel="noopener" href="https://pkg.go.dev/github.com/nats-io/nats.go">nats.go</a> 客户端。</p>
+<h3 id="连接"><a href="#连接" class="headerlink" title="连接"></a>连接</h3><p>连接主要通过 <code>nats.Connect</code>，然后提供一些选项，有几个选项可以了解一下：</p>
+<ul>
+<li><code>RetryOnFailedConnect</code>：如果设为 true，Connect 失败不会返回错误，而是在后台尝试连接 Server，连接状态为 Connecting</li>
+<li><code>MaxReconnects</code>：顾名思义，最大重连次数</li>
+<li><code>ErrorHandler</code>：<code>ErrSlowConsumer</code> 是一个需要关注的特殊错误，需要通过设置 <code>ErrorHandler</code> 来接收这个错误，在收到 <code>ErrSlowConsumer</code> 错误时，可以同时执行相关 <code>Subscription</code> 的 <code>Pending</code> 函数获取消息堆积数量</li>
+</ul>
+<p>JetStream 的客户端已经能做到自动重连后重新订阅了，所以不需要我们做额外的封装。</p>
+<h3 id="JetStream-1"><a href="#JetStream-1" class="headerlink" title="JetStream"></a>JetStream</h3><p>JetStream 客户端要从 <code>nats.Conn</code> 中产生，只是增加了一些专用参数，用法接近。</p>
+<h3 id="Pull-based-订阅"><a href="#Pull-based-订阅" class="headerlink" title="Pull-based 订阅"></a>Pull-based 订阅</h3><p>Pull-based 订阅在 <code>Fetch</code> 时尽量带上 <code>nats.MaxWait</code> 或者 <code>nats.Context</code>。一方面是经验之谈，另外一方面是我的使用场景需要，<code>nats.MaxWait</code> 超时返回的错误是 <code>nats.ErrTimeout</code>，不是 <code>context.DeadlineExceeded</code>。</p>
+<h3 id="退出"><a href="#退出" class="headerlink" title="退出"></a>退出</h3><p>正如我前面提到的，一个异常关闭的客户端，会影响到 Consumer 的释放，不论是否配置了 <code>InactiveThreshold</code>，这都不是一个优雅的过程，所以最好时能做到先取消订阅，再退出客户端。</p>
+<p>如果在关闭连接时使用 <code>Drain</code>，那么客户端会先取消所有订阅后再关闭连接，所以总是推荐使用。</p>
+<p>如果你没有使用 <code>InactiveThreshold</code>，对于已经处于异常状态的 Durable Consumer，你可以选择从消费者集群里选择一个客户端，或者定期启动一个客户端来清理异常 Consumer。</p>
+<h1 id="Relevant-Links"><a href="#Relevant-Links" class="headerlink" title="Relevant Links"></a>Relevant Links</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://marco79423.net/articles/%E6%B7%BA%E8%AB%87-natsstan-%E5%92%8C-jetstream-%E5%85%A9%E4%B8%89%E4%BA%8B">淺談 NATS、STAN 和 JetStream 兩三事</a></li>
+<li><a target="_blank" rel="noopener" href="https://nats.io/blog/new-per-subject-discard-policy/">Infinite message deduplication in JetStream</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2022/09/05/using-dwm-on-manjaro/" rel="prev" title="在 Manjaro 中使用 dwm">
+                  <i class="fa fa-chevron-left"></i> 在 Manjaro 中使用 dwm
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2023/07/02/first-spring-boot-application/" rel="next" title="我的第一个 Spring Boot 应用">
+                  我的第一个 Spring Boot 应用 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">vizee</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://unpkg.com/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
