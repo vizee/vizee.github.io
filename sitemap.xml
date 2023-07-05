@@ -4,7 +4,7 @@
   <url>
     <loc>https://vizee.org/2023/07/02/first-spring-boot-application/</loc>
     
-    <lastmod>2023-07-02</lastmod>
+    <lastmod>2023-07-05</lastmod>
     
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -508,7 +508,7 @@
 
   <url>
     <loc>https://vizee.org/</loc>
-    <lastmod>2023-07-02</lastmod>
+    <lastmod>2023-07-05</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -516,56 +516,56 @@
   
   <url>
     <loc>https://vizee.org/tags/mysql/</loc>
-    <lastmod>2023-07-02</lastmod>
+    <lastmod>2023-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://vizee.org/tags/linux/</loc>
-    <lastmod>2023-07-02</lastmod>
+    <lastmod>2023-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://vizee.org/tags/consensus/</loc>
-    <lastmod>2023-07-02</lastmod>
+    <lastmod>2023-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://vizee.org/tags/go/</loc>
-    <lastmod>2023-07-02</lastmod>
+    <lastmod>2023-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://vizee.org/tags/kubernetes/</loc>
-    <lastmod>2023-07-02</lastmod>
+    <lastmod>2023-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://vizee.org/tags/oj/</loc>
-    <lastmod>2023-07-02</lastmod>
+    <lastmod>2023-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://vizee.org/tags/neovim/</loc>
-    <lastmod>2023-07-02</lastmod>
+    <lastmod>2023-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://vizee.org/tags/java/</loc>
-    <lastmod>2023-07-02</lastmod>
+    <lastmod>2023-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
