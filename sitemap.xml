@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://vizee.org/2023/07/09/java-grpc-and-spring-boot/</loc>
+    <loc>https://vizee.org/2023/07/02/first-spring-boot-application/</loc>
     
     <lastmod>2023-07-08</lastmod>
     
@@ -11,9 +11,9 @@
   </url>
   
   <url>
-    <loc>https://vizee.org/2023/07/02/first-spring-boot-application/</loc>
+    <loc>https://vizee.org/2023/07/09/java-grpc-and-spring-boot/</loc>
     
-    <lastmod>2023-07-05</lastmod>
+    <lastmod>2023-07-08</lastmod>
     
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
