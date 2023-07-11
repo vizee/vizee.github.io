@@ -38,6 +38,15 @@
   </url>
   
   <url>
+    <loc>https://vizee.org/2023/07/09/java-grpc-and-spring-boot/</loc>
+    
+    <lastmod>2023-07-11</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://vizee.org/2023/07/11/spring-cloud-development/</loc>
     
     <lastmod>2023-07-11</lastmod>
@@ -48,15 +57,6 @@
   
   <url>
     <loc>https://vizee.org/2023/07/02/first-spring-boot-application/</loc>
-    
-    <lastmod>2023-07-11</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://vizee.org/2023/07/09/java-grpc-and-spring-boot/</loc>
     
     <lastmod>2023-07-11</lastmod>
     
