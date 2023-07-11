@@ -2,9 +2,36 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://vizee.org/2023/07/02/first-spring-boot-application/</loc>
+    <loc>https://vizee.org/2022/09/05/using-dwm-on-manjaro/</loc>
     
-    <lastmod>2023-07-08</lastmod>
+    <lastmod>2023-07-11</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://vizee.org/2016/08/31/regexp-to-nfa/</loc>
+    
+    <lastmod>2023-07-11</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://vizee.org/2018/02/24/grpc-consistent-hashing-balancer/</loc>
+    
+    <lastmod>2023-07-11</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://vizee.org/2023/07/11/spring-cloud-development/</loc>
+    
+    <lastmod>2023-07-11</lastmod>
     
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -12,6 +39,15 @@
   
   <url>
     <loc>https://vizee.org/2023/07/09/java-grpc-and-spring-boot/</loc>
+    
+    <lastmod>2023-07-09</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://vizee.org/2023/07/02/first-spring-boot-application/</loc>
     
     <lastmod>2023-07-08</lastmod>
     
@@ -164,15 +200,6 @@
   </url>
   
   <url>
-    <loc>https://vizee.org/2016/08/31/regexp-to-nfa/</loc>
-    
-    <lastmod>2023-02-21</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://vizee.org/2017/07/24/simple-goroutine-pool/</loc>
     
     <lastmod>2023-02-21</lastmod>
@@ -201,15 +228,6 @@
   
   <url>
     <loc>https://vizee.org/2018/05/06/use-blank-as-zero-value/</loc>
-    
-    <lastmod>2023-02-21</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://vizee.org/2022/09/05/using-dwm-on-manjaro/</loc>
     
     <lastmod>2023-02-21</lastmod>
     
@@ -452,15 +470,6 @@
   </url>
   
   <url>
-    <loc>https://vizee.org/2018/02/24/grpc-consistent-hashing-balancer/</loc>
-    
-    <lastmod>2023-02-21</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://vizee.org/2017/12/24/grpc-service-discovery-with-consul/</loc>
     
     <lastmod>2023-02-21</lastmod>
@@ -517,7 +526,7 @@
 
   <url>
     <loc>https://vizee.org/</loc>
-    <lastmod>2023-07-08</lastmod>
+    <lastmod>2023-07-11</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -525,56 +534,56 @@
   
   <url>
     <loc>https://vizee.org/tags/mysql/</loc>
-    <lastmod>2023-07-08</lastmod>
+    <lastmod>2023-07-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://vizee.org/tags/linux/</loc>
-    <lastmod>2023-07-08</lastmod>
+    <lastmod>2023-07-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://vizee.org/tags/consensus/</loc>
-    <lastmod>2023-07-08</lastmod>
+    <lastmod>2023-07-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://vizee.org/tags/go/</loc>
-    <lastmod>2023-07-08</lastmod>
+    <lastmod>2023-07-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://vizee.org/tags/kubernetes/</loc>
-    <lastmod>2023-07-08</lastmod>
+    <lastmod>2023-07-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://vizee.org/tags/oj/</loc>
-    <lastmod>2023-07-08</lastmod>
+    <lastmod>2023-07-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://vizee.org/tags/neovim/</loc>
-    <lastmod>2023-07-08</lastmod>
+    <lastmod>2023-07-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://vizee.org/tags/java/</loc>
-    <lastmod>2023-07-08</lastmod>
+    <lastmod>2023-07-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
