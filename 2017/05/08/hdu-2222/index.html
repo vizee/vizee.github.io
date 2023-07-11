@@ -4,8 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width">
 <meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 5.4.1">
-
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 5.4.2">
 
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
@@ -16,10 +15,10 @@
 
 
 
-<link rel="stylesheet" href="https://unpkg.com/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" integrity="sha256-HtsXJanqjKTc8vVQjO4YMhiqFoXkfBsjBWcX91T1jr8=" crossorigin="anonymous">
   <link rel="stylesheet" href="https://unpkg.com/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"vizee.org","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.11.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"vizee.org","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.17.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
 
     <meta name="description" content="hdu 2222 AC 自动机传送门：http:&#x2F;&#x2F;acm.hdu.edu.cn&#x2F;showproblem.php?pid&#x3D;2222">
 <meta property="og:type" content="article">
@@ -49,6 +48,9 @@
 
 
 
+
+
+
   <noscript>
     <link rel="stylesheet" href="/css/noscript.css">
   </noscript>
@@ -58,8 +60,8 @@
   <div class="headband"></div>
 
   <main class="main">
-    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"><div class="site-brand-container">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
   <div class="site-nav-toggle">
     <div class="toggle" aria-label="切换导航栏" role="button">
         <span class="toggle-line"></span>
@@ -78,7 +80,7 @@
   </div>
 
   <div class="site-nav-right">
-    <div class="toggle popup-trigger">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
     </div>
   </div>
 </div>
@@ -93,15 +95,9 @@
 
 
 
-</div>
+</header>
         
   
-  <div class="toggle sidebar-toggle" role="button">
-    <span class="toggle-line"></span>
-    <span class="toggle-line"></span>
-    <span class="toggle-line"></span>
-  </div>
-
   <aside class="sidebar">
 
     <div class="sidebar-inner sidebar-overview-active">
@@ -121,11 +117,11 @@
         <!--/noindex-->
 
         <div class="site-overview-wrap sidebar-panel">
-          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
   <p class="site-author-name" itemprop="name">vizee</p>
   <div class="site-description" itemprop="description">vegetable is zombie evilest enemy</div>
 </div>
-<div class="site-state-wrap site-overview-item animated">
+<div class="site-state-wrap animated">
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
@@ -139,46 +135,36 @@
       </div>
   </nav>
 </div>
-  <div class="links-of-author site-overview-item animated">
+  <div class="links-of-author animated">
       <span class="links-of-author-item">
-        <a href="https://github.com/vizee" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;vizee" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+        <a href="https://github.com/vizee" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;vizee" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
       </span>
-  </div>
-
-
-  <div class="links-of-blogroll site-overview-item animated">
-    <div class="links-of-blogroll-title"><i class="fa fa-globe fa-fw"></i>
-      传送门
-    </div>
-    <ul class="links-of-blogroll-list">
-        <li class="links-of-blogroll-item">
-          <a href="https://kingsamchen.github.io/" title="https:&#x2F;&#x2F;kingsamchen.github.io" rel="noopener" target="_blank">KC</a>
-        </li>
-        <li class="links-of-blogroll-item">
-          <a href="https://powman.org/" title="https:&#x2F;&#x2F;powman.org" rel="noopener" target="_blank">泡面</a>
-        </li>
-    </ul>
   </div>
 
         </div>
       </div>
     </div>
-  </aside>
-  <div class="sidebar-dimmer"></div>
-
-
-    </header>
 
     
-  <div class="back-to-top" role="button" aria-label="返回顶部">
-    <i class="fa fa-arrow-up"></i>
-    <span>0%</span>
-  </div>
+    <div class="sidebar-inner sidebar-blogroll">
+      <div class="links-of-blogroll animated">
+        <div class="links-of-blogroll-title"><i class="fa fa-globe fa-fw"></i>
+          链接
+        </div>
+        <ul class="links-of-blogroll-list">
+            <li class="links-of-blogroll-item">
+              <a href="https://kingsamchen.github.io/" title="https:&#x2F;&#x2F;kingsamchen.github.io" rel="noopener" target="_blank">KC</a>
+            </li>
+            <li class="links-of-blogroll-item">
+              <a href="https://powman.org/" title="https:&#x2F;&#x2F;powman.org" rel="noopener" target="_blank">泡面</a>
+            </li>
+        </ul>
+      </div>
+    </div>
+  </aside>
 
-<noscript>
-  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
-</noscript>
 
+    </div>
 
     <div class="main-inner post posts-expand">
 
@@ -239,8 +225,7 @@
     
     
     
-    <div class="post-body" itemprop="articleBody">
-        <p>hdu 2222 AC 自动机<br>传送门：<a target="_blank" rel="noopener" href="http://acm.hdu.edu.cn/showproblem.php?pid=2222">http://acm.hdu.edu.cn/showproblem.php?pid=2222</a></p>
+    <div class="post-body" itemprop="articleBody"><p>hdu 2222 AC 自动机<br>传送门：<a target="_blank" rel="noopener" href="http://acm.hdu.edu.cn/showproblem.php?pid=2222">http://acm.hdu.edu.cn/showproblem.php?pid=2222</a></p>
 <span id="more"></span>
 
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> N 500051</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> CHARSET_SIZE 26</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> NIL 0</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ROOT 1</span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> alloc;</span><br><span class="line"><span class="type">int</span> trans[N][CHARSET_SIZE];</span><br><span class="line"><span class="type">int</span> fails[N];</span><br><span class="line"><span class="type">int</span> counts[N];</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> qhead, qtail;</span><br><span class="line"><span class="type">int</span> queue[N];</span><br><span class="line"></span><br><span class="line"><span class="type">char</span> str[<span class="number">1000001</span>];</span><br><span class="line"><span class="type">char</span> keyword[<span class="number">51</span>];</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">ac_alloc</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> n = alloc++;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> c = <span class="number">0</span>; c &lt; CHARSET_SIZE; c++) &#123;</span><br><span class="line">        trans[n][c] = NIL;</span><br><span class="line">    &#125;</span><br><span class="line">    counts[n] = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">return</span> n;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">ac_insert</span><span class="params">(<span class="type">char</span> *s)</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> n = ROOT;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; s[i]; i++) &#123;</span><br><span class="line">        <span class="type">int</span> c = s[i] - <span class="string">&#x27;a&#x27;</span>;</span><br><span class="line">        <span class="keyword">if</span> (trans[n][c] == NIL) &#123;</span><br><span class="line">            trans[n][c] = <span class="built_in">ac_alloc</span>();</span><br><span class="line">        &#125;</span><br><span class="line">        n = trans[n][c];</span><br><span class="line">    &#125;</span><br><span class="line">    counts[n]++;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">ac_build_fails</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    qhead = qtail = <span class="number">0</span>;</span><br><span class="line">    fails[ROOT] = NIL;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; CHARSET_SIZE; i++) &#123;</span><br><span class="line">        <span class="keyword">if</span> (trans[ROOT][i] != NIL) &#123;</span><br><span class="line">            fails[trans[ROOT][i]] = ROOT;</span><br><span class="line">            queue[qtail++] = trans[ROOT][i];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">while</span> (qhead &lt; qtail) &#123;</span><br><span class="line">        <span class="type">int</span> n = queue[qhead++];</span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; CHARSET_SIZE; i++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (trans[n][i] == NIL) &#123;</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="type">int</span> fail = fails[n];</span><br><span class="line">            <span class="keyword">while</span> (fail != NIL) &#123;</span><br><span class="line">                <span class="keyword">if</span> (trans[fail][i] != NIL) &#123;</span><br><span class="line">                    fails[trans[n][i]] = trans[fail][i];</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                fail = fails[fail];</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (fail == NIL) &#123;</span><br><span class="line">                fails[trans[n][i]] = ROOT;</span><br><span class="line">            &#125;</span><br><span class="line">            queue[qtail++] = trans[n][i];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">ac_match</span><span class="params">(<span class="type">char</span> *s)</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> total = <span class="number">0</span>;</span><br><span class="line">    <span class="type">int</span> n = ROOT;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; s[i]; i++) &#123;</span><br><span class="line">        <span class="type">int</span> c = s[i] - <span class="string">&#x27;a&#x27;</span>;</span><br><span class="line">        <span class="keyword">while</span> (trans[n][c] == NIL &amp;&amp; n != ROOT) &#123;</span><br><span class="line">            n = fails[n];</span><br><span class="line">        &#125;</span><br><span class="line">        n = trans[n][c];</span><br><span class="line">        <span class="keyword">if</span> (n == NIL) &#123;</span><br><span class="line">            n = ROOT;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="type">int</span> t = n;</span><br><span class="line">        <span class="keyword">while</span> (t != ROOT &amp;&amp; counts[t] != <span class="number">-1</span>) &#123;</span><br><span class="line">            total += counts[t];</span><br><span class="line">            counts[t] = <span class="number">-1</span>;</span><br><span class="line">            t = fails[t];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> total;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> t;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">scanf</span>(<span class="string">&quot;%d&quot;</span>, &amp;t);</span><br><span class="line">    <span class="keyword">while</span> (t--) &#123;</span><br><span class="line">        alloc = ROOT;</span><br><span class="line">        <span class="built_in">ac_alloc</span>();</span><br><span class="line">        <span class="type">int</span> w;</span><br><span class="line">        <span class="built_in">scanf</span>(<span class="string">&quot;%d&quot;</span>, &amp;w);</span><br><span class="line">        <span class="keyword">while</span> (w--) &#123;</span><br><span class="line">            <span class="built_in">scanf</span>(<span class="string">&quot;%s&quot;</span>, keyword);</span><br><span class="line">            <span class="built_in">ac_insert</span>(keyword);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="built_in">ac_build_fails</span>();</span><br><span class="line">        <span class="built_in">scanf</span>(<span class="string">&quot;%s&quot;</span>, str);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;%d\n&quot;</span>, <span class="built_in">ac_match</span>(str));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -285,15 +270,14 @@
   <footer class="footer">
     <div class="footer-inner">
 
-
-<div class="copyright">
-  &copy; 
-  <span itemprop="copyrightYear">2023</span>
-  <span class="with-love">
-    <i class="fa fa-heart"></i>
-  </span>
-  <span class="author" itemprop="copyrightHolder">vizee</span>
-</div>
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2023</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">vizee</span>
+  </div>
   <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
   </div>
 
@@ -301,10 +285,28 @@
   </footer>
 
   
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
   <script src="https://unpkg.com/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
 <script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
 
   
+
 
 
 
