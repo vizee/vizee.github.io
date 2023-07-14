@@ -20,25 +20,30 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"vizee.org","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.17.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
 
-    <meta name="description" content="vegetable is zombie evilest enemy">
-<meta property="og:type" content="website">
-<meta property="og:title" content="&#x2F;vizee">
-<meta property="og:url" content="https://vizee.org/index.html">
+    <meta name="description" content="Spring Cloud GatewaySpring Cloud Gateway 可以用来快速开发一个网关。 通过 Spring Initializr 创建一个 gateway 项目，添加依赖：Gateway 和 Consul Discovery。网关项目有 Spring Cloud Gateway 依赖就够了，Consul Discovery 依赖后面要用到，加上这个依赖以后就需要在项目启动前启">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从零放弃学习 Spring - Spring Cloud 网关开发">
+<meta property="og:url" content="https://vizee.org/2023/07/15/spring-cloud-gateway-development/index.html">
 <meta property="og:site_name" content="&#x2F;vizee">
-<meta property="og:description" content="vegetable is zombie evilest enemy">
+<meta property="og:description" content="Spring Cloud GatewaySpring Cloud Gateway 可以用来快速开发一个网关。 通过 Spring Initializr 创建一个 gateway 项目，添加依赖：Gateway 和 Consul Discovery。网关项目有 Spring Cloud Gateway 依赖就够了，Consul Discovery 依赖后面要用到，加上这个依赖以后就需要在项目启动前启">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://docs.spring.io/spring-cloud-gateway/docs/current/reference/html/images/spring_cloud_gateway_diagram.png">
+<meta property="article:published_time" content="2023-07-14T16:03:52.000Z">
+<meta property="article:modified_time" content="2023-07-14T16:04:32.028Z">
 <meta property="article:author" content="vizee">
+<meta property="article:tag" content="java">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://docs.spring.io/spring-cloud-gateway/docs/current/reference/html/images/spring_cloud_gateway_diagram.png">
 
 
-<link rel="canonical" href="https://vizee.org/">
+<link rel="canonical" href="https://vizee.org/2023/07/15/spring-cloud-gateway-development/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":true,"isPost":false,"lang":"zh-CN","comments":"","permalink":"","path":"index.html","title":""}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://vizee.org/2023/07/15/spring-cloud-gateway-development/","path":"2023/07/15/spring-cloud-gateway-development/","title":"从零放弃学习 Spring - Spring Cloud 网关开发"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>/vizee</title>
+<title>从零放弃学习 Spring - Spring Cloud 网关开发 | /vizee</title>
   
 
 
@@ -71,7 +76,7 @@
 
     <a href="/" class="brand" rel="start">
       <i class="logo-line"></i>
-      <h1 class="site-title">/vizee</h1>
+      <p class="site-title">/vizee</p>
       <i class="logo-line"></i>
     </a>
   </div>
@@ -97,7 +102,7 @@
   
   <aside class="sidebar">
 
-    <div class="sidebar-inner sidebar-overview-active">
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
       <ul class="sidebar-nav">
         <li class="sidebar-nav-toc">
           文章目录
@@ -110,6 +115,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Spring-Cloud-Gateway"><span class="nav-number">1.</span> <span class="nav-text">Spring Cloud Gateway</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%B7%AF%E7%94%B1%E9%85%8D%E7%BD%AE"><span class="nav-number">2.</span> <span class="nav-text">路由配置</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Filter"><span class="nav-number">3.</span> <span class="nav-text">Filter</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#GlobalFilter"><span class="nav-number">3.1.</span> <span class="nav-text">GlobalFilter</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GatewayFilterFactory"><span class="nav-number">3.2.</span> <span class="nav-text">GatewayFilterFactory</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%B7%AF%E7%94%B1"><span class="nav-number">4.</span> <span class="nav-text">路由</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#RouteLocator"><span class="nav-number">4.1.</span> <span class="nav-text">RouteLocator</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#discovery"><span class="nav-number">4.2.</span> <span class="nav-text">discovery</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -163,16 +169,17 @@
 
     </div>
 
-    <div class="main-inner index posts-expand">
+    <div class="main-inner post posts-expand">
 
-    
+
+  
 
 
 <div class="post-block">
   
   
 
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://vizee.org/2023/07/15/spring-cloud-gateway-development/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -186,13 +193,13 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | /vizee">
+      <meta itemprop="name" content="从零放弃学习 Spring - Spring Cloud 网关开发 | /vizee">
       <meta itemprop="description" content="">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2023/07/15/spring-cloud-gateway-development/" class="post-title-link" itemprop="url">从零放弃学习 Spring - Spring Cloud 网关开发</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          从零放弃学习 Spring - Spring Cloud 网关开发
+        </h1>
 
         <div class="post-meta-container">
           <div class="post-meta">
@@ -215,8 +222,7 @@
     
     
     
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="Spring-Cloud-Gateway"><a href="#Spring-Cloud-Gateway" class="headerlink" title="Spring Cloud Gateway"></a>Spring Cloud Gateway</h1><p><a target="_blank" rel="noopener" href="https://spring.io/projects/spring-cloud-gateway">Spring Cloud Gateway</a> 可以用来快速开发一个网关。</p>
+    <div class="post-body" itemprop="articleBody"><h1 id="Spring-Cloud-Gateway"><a href="#Spring-Cloud-Gateway" class="headerlink" title="Spring Cloud Gateway"></a>Spring Cloud Gateway</h1><p><a target="_blank" rel="noopener" href="https://spring.io/projects/spring-cloud-gateway">Spring Cloud Gateway</a> 可以用来快速开发一个网关。</p>
 <p>通过 <a target="_blank" rel="noopener" href="https://start.spring.io/">Spring Initializr</a> 创建一个 gateway 项目，添加依赖：<code>Gateway</code> 和 <code>Consul Discovery</code>。网关项目有 Spring Cloud Gateway 依赖就够了，Consul Discovery 依赖后面要用到，加上这个依赖以后就需要在项目启动前启动一个 Consul Agent，详情查看<a href="/2023/07/11/spring-cloud-development">上篇文章</a>，另外我们不需要把网关注册到 Consul，所以要给 Application 类加一行注解 <code>@EnableDiscoveryClient(autoRegister = false)</code>。</p>
 <p>增加配置文件 application.yml：</p>
 <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">server:</span></span><br><span class="line">  <span class="attr">port:</span> <span class="number">8222</span></span><br><span class="line"><span class="attr">spring:</span></span><br><span class="line">  <span class="attr">application:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">&#x27;@project.artifactId@&#x27;</span></span><br><span class="line"><span class="attr">logging:</span></span><br><span class="line">  <span class="attr">level:</span></span><br><span class="line">    <span class="attr">root:</span> <span class="string">info</span></span><br><span class="line">    <span class="attr">&#x27;org.springframework.web.server&#x27;:</span> <span class="string">debug</span></span><br><span class="line"><span class="attr">spring:</span></span><br><span class="line">  <span class="attr">profiles:</span></span><br><span class="line">    <span class="attr">active:</span> <span class="string">consul</span></span><br></pre></td></tr></table></figure>
@@ -287,7 +293,6 @@
 <li><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/c4952ef14660">https://www.jianshu.com/p/c4952ef14660</a></li>
 </ul>
 
-      
     </div>
 
     
@@ -295,266 +300,21 @@
     
 
     <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
+          <div class="post-tags">
+              <a href="/tags/java/" rel="tag"># java</a>
+          </div>
 
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://vizee.org/2023/07/11/spring-cloud-development/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="vizee">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="/vizee">
-      <meta itemprop="description" content="vegetable is zombie evilest enemy">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | /vizee">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2023/07/11/spring-cloud-development/" class="post-title-link" itemprop="url">从零放弃学习 Spring - Spring Cloud 应用开发</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-      
-
-      <time title="创建时间：2023-07-11 22:41:32 / 修改时间：22:49:48" itemprop="dateCreated datePublished" datetime="2023-07-11T22:41:32+08:00">2023-07-11</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="Spring-Cloud-Consul"><a href="#Spring-Cloud-Consul" class="headerlink" title="Spring Cloud Consul"></a>Spring Cloud Consul</h1><p>Spring Boot 是用来构建应用的框架，Spring Cloud 则是基于 Spring Boot 构建云上应用的框架。在开发云上应用中，一个非常重要的场景就是服务发现和配置，Spring Cloud 框架提供了服务发现和配置管理机制，只要引入对应的组件和简单的配置，就能快速接入相应的中间件。</p>
-<p>首先介绍的就是使用 Spring Cloud Consul 组件集成 Consul 服务发现和配置管理能力。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2023/07/11/spring-cloud-development/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
         
-      
-    </div>
 
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://vizee.org/2023/07/09/java-grpc-and-spring-boot/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="vizee">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="/vizee">
-      <meta itemprop="description" content="vegetable is zombie evilest enemy">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | /vizee">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2023/07/09/java-grpc-and-spring-boot/" class="post-title-link" itemprop="url">从零放弃学习 Spring - Java GRPC 和 Spring Boot</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2023-07-09 01:52:20" itemprop="dateCreated datePublished" datetime="2023-07-09T01:52:20+08:00">2023-07-09</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2023-07-11 23:04:25" itemprop="dateModified" datetime="2023-07-11T23:04:25+08:00">2023-07-11</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="Java-GRPC-From-Scratch"><a href="#Java-GRPC-From-Scratch" class="headerlink" title="Java GRPC From Scratch"></a>Java GRPC From Scratch</h1><h2 id="创建项目"><a href="#创建项目" class="headerlink" title="创建项目"></a>创建项目</h2><p>直接使用 IDEA 创建一个项目，选择 Maven 构建系统，JDK 我一直用 GraalVM JDK 17。</p>
-<h2 id="依赖和构建插件"><a href="#依赖和构建插件" class="headerlink" title="依赖和构建插件"></a>依赖和构建插件</h2><p>项目要用到的依赖有</p>
-<ul>
-<li>日志依赖 logback-classic，相对于 logback 和 slf4j</li>
-<li>GRPC 依赖 grpc-netty、grpc-protobuf、grpc-stub</li>
-<li>以及 javax.annotation-api，GRPC 生成的代码用到了 javax 库注解，但是新版 JDK 默认不提供</li>
-<li>lombok，这个依赖可以让 IDEA 自动添加</li>
-</ul>
-<p>另外为了开发方便，还要在构建系统里加入自动编译 proto 文件的构建插件 protobuf-maven-plugin。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2023/07/09/java-grpc-and-spring-boot/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2023/07/11/spring-cloud-development/" rel="prev" title="从零放弃学习 Spring - Spring Cloud 应用开发">
+                  <i class="fa fa-chevron-left"></i> 从零放弃学习 Spring - Spring Cloud 应用开发
+                </a>
             </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://vizee.org/2023/07/02/first-spring-boot-application/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="vizee">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="/vizee">
-      <meta itemprop="description" content="vegetable is zombie evilest enemy">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | /vizee">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2023/07/02/first-spring-boot-application/" class="post-title-link" itemprop="url">从零放弃学习 Spring - 第一个 Spring Boot 应用</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2023-07-02 19:12:06" itemprop="dateCreated datePublished" datetime="2023-07-02T19:12:06+08:00">2023-07-02</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2023-07-11 22:49:22" itemprop="dateModified" datetime="2023-07-11T22:49:22+08:00">2023-07-11</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="Spring-项目"><a href="#Spring-项目" class="headerlink" title="Spring 项目"></a>Spring 项目</h1><p>哥们最近突击学习了一下 Spring 这些个东西。</p>
-<p>Spring 提供了一个网站 <a target="_blank" rel="noopener" href="https://start.spring.io/">Sping Initializr</a> 用来创建初始的 Spring 项目，这里按我需求选了 Maven 和 Java 17，然后顺手添加了 3 个依赖：<code>Spring Data JPA</code>、<code>MySQL Driver</code> 和 <code>Spring Web</code>，依赖在项目创建后随时都能修改。点击 <code>Generate</code> 生成项目代码。</p>
-<p>然后使用 IDEA 加载项目，这部分最好是能够提前配置一个镜像加速 Maven 下载依赖，配置镜像可以不用修改 Maven 自带的 settings.xml，可以在 <code>$HOME/.m2/settings.xml</code> 直接添加一个针对当前用户的配置文件或者在 mvn 中使用 <code>-s</code> 选项指定配置文件路径，这里可能需要注意的是，Maven 默认阻止 http 访问（你可以在 Maven 自带的 settings.xml 里看到相关配置），尽量使用 https 镜像仓库（或者删掉阻止规则？）。</p>
-<p>IDEA 加载项目后可以利用自带的 Maven 执行 <code>Package</code> 操作，完成后会在 target 目录下两个 jar 文件。一个是默认打出来（被重命名过）的 jar.original，如果没有 spring-boot-maven-plugin，那么这个是生成的目标文件，但是这个 jar 是没办法直接通过 <code>java -jar</code> 运行的，它只包含了项目代码中最基本的文件，不包含运行 jar 必要的元信息和依赖，你可以通过命令查看一个 jar 包中的文件列表，例如：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jar tf demo-0.0.1-SNAPSHOT.jar.original</span><br></pre></td></tr></table></figure>
-
-<p>spring-boot-maven-plugin 插件会对 jar 重新打包，重新打包后的 jar 文件里包含了必要的元信息和依赖 jar 文件。直接把 jar 文件打包进 jar 的做法叫 <em>jar in jar</em>，其实 Maven 有插件能够搜集所有依赖并解压，然后把所有 class 文件重新打包成一个 jar，这样打包结果会更加精简，打包过程中可以做一些适当的裁剪，但是会和一些机制产生冲突（以后会解释）。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2023/07/02/first-spring-boot-application/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
+            <div class="post-nav-item">
             </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
+          </div>
     </footer>
   </article>
 </div>
@@ -562,516 +322,7 @@
 
 
 
-    
 
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://vizee.org/2023/03/28/nats-2.9-jetstream/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="vizee">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="/vizee">
-      <meta itemprop="description" content="vegetable is zombie evilest enemy">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | /vizee">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2023/03/28/nats-2.9-jetstream/" class="post-title-link" itemprop="url">NATS 2.9 JetStream</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2023-03-28 22:17:39" itemprop="dateCreated datePublished" datetime="2023-03-28T22:17:39+08:00">2023-03-28</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2023-07-02 17:15:37" itemprop="dateModified" datetime="2023-07-02T17:15:37+08:00">2023-07-02</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="从-STAN-说起"><a href="#从-STAN-说起" class="headerlink" title="从 STAN 说起"></a>从 STAN 说起</h1><p>去年本想水一篇关于 NATS JetStream 的博客，当时写了一部分，结果翻资料翻到一篇博客 <a target="_blank" rel="noopener" href="https://marco79423.net/articles/%E6%B7%BA%E8%AB%87-natsstan-%E5%92%8C-jetstream-%E5%85%A9%E4%B8%89%E4%BA%8B">淺談 NATS、STAN 和 JetStream 兩三事</a>，把我想说的基本都提到了，所以我当时弃坑了。最近用上了 NATS 2.9 版本，所以想着把新了解到的概念和之前想聊的一些内容都整理一下。如果你对 NATS 了解不多，非常推荐先看看我前面提到的那篇文章。</p>
-<p>在升到 NATS JetStream 之前，我一直在用 <a target="_blank" rel="noopener" href="https://docs.nats.io/legacy/stan/intro">STAN</a>（aka NATS Streaming）。STAN 是 NATS 上一代持久化方案，是一个独立的 Server，它内嵌了 NATS Server，在这之上构建了一个持久化层，并且支持集群，集群节点之间使用 Raft 算法。STAN 在使用上基本接近 NATS，但是有个别要注意的地方。</p>
-<p>一个是客户端连接时要提供 Cluster ID 和 Client ID。可以把 NATS 抽象看作 STAN 的网络层，客户端连入的是 NATS 的网络，访问这个网络上的 STAN Server，那么连接这个网络上的 Cluster 需要说明；Client ID 必须是唯一的，STAN 用 <em>Client ID 和 Durable Name</em> 区分 Consumer 持久化视图。</p>
-<p>还有一个比较重要的是断线重连问题，也是我们踩过的坑。基于前面提到的抽象理解，STAN 构建于 NATS 网络层之上，客户端实际上没有真正连接到 STAN Server，所以断线重连机制变得复杂。记得当时是阿里云网络波动，STAN 客户端集体掉线后没有恢复，造成了不小影响。后来我封装 stan.go 实现了一个支持重连的客户端，通过 <code>SetConnectionLostHandler</code> 在连接断开时创建新连接，并且支持在连接切换后恢复订阅。</p>
-<p>不过这些都不重要了，STAN 已经被标记为 deprecated，只维护到 2023.6。</p>
-<h1 id="JetStream"><a href="#JetStream" class="headerlink" title="JetStream"></a>JetStream</h1><p><a target="_blank" rel="noopener" href="https://docs.nats.io/nats-concepts/jetstream">JetStream</a> 是 NATS 2.2 开始内置的持久化机制，满足 At-Least-Once 语义，也提供了一些机制支持 Exactly-Once 语义。目前发展到 2.9.15 版本，已经很好用了。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2023/03/28/nats-2.9-jetstream/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://vizee.org/2022/09/05/using-dwm-on-manjaro/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="vizee">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="/vizee">
-      <meta itemprop="description" content="vegetable is zombie evilest enemy">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | /vizee">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2022/09/05/using-dwm-on-manjaro/" class="post-title-link" itemprop="url">在 Manjaro 中使用 dwm</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2022-09-05 20:17:03" itemprop="dateCreated datePublished" datetime="2022-09-05T20:17:03+08:00">2022-09-05</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2023-07-11 23:05:27" itemprop="dateModified" datetime="2023-07-11T23:05:27+08:00">2023-07-11</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="从-Linux-Mint-到-Manjaro"><a href="#从-Linux-Mint-到-Manjaro" class="headerlink" title="从 Linux Mint 到 Manjaro"></a>从 Linux Mint 到 Manjaro</h1><p>我一个 Linux Mint 用户，怎么就变成 Manjaro 用户了呢？</p>
-<p>自从<a href="/2020/07/14/after-installing-linux-mint-20/">上次</a>装完 Linux Mint 20 Xfce 以后，我的体验还是不错的，我不需要很臃肿复杂的环境，很多软件对 Ubuntu 系发行版支持确实不错，用起来也算是没什么大问题。直到前段时间手贱安装了 TwistUI，想卸载时发现很难卸载干净，所以决(zhi)定(neng)重装系统，正好时间点在 7 月份中旬，Linux Mint 21 还没有发布，于是需求变成了换个发行版。开始的时候我打算试试 NixOS，在虚拟机上体验了一会，可惜 NixOS 不是 FHS，怕自己用得不太习惯，最后选择了 Manjaro。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/09/05/using-dwm-on-manjaro/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://vizee.org/2022/05/03/kubernetes-go-client-ssa/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="vizee">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="/vizee">
-      <meta itemprop="description" content="vegetable is zombie evilest enemy">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | /vizee">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2022/05/03/kubernetes-go-client-ssa/" class="post-title-link" itemprop="url">通过 Kubernetes Go Client 实现 SSA</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2022-05-03 03:02:03" itemprop="dateCreated datePublished" datetime="2022-05-03T03:02:03+08:00">2022-05-03</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2023-02-21 21:02:53" itemprop="dateModified" datetime="2023-02-21T21:02:53+08:00">2023-02-21</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="更新-K8s-对象"><a href="#更新-K8s-对象" class="headerlink" title="更新 K8s 对象"></a>更新 K8s 对象</h1><p>在 K8s 更新资源操作有两种形式：Replace 和 Patch。</p>
-<p>Replace 形式主要用于替换对象 <code>spec</code>，这是一个 read-then-write 操作，即你要先从 K8s 获取对象，修改 <code>spec</code>，再提交更新。这个过程中对象其他字段不需要特意维护，提交的 <code>apiVersion</code>、<code>kind</code> 和 <code>metadata</code> 中提供的信息会用于确定对象，而 <code>status</code> 则会被 K8s 忽略（如果需要更新 <code>status</code>，需要用专用的操作）。</p>
-<p>在对象 <code>metadata</code> 中有一个 <code>resourceVersion</code> 字段，用来追踪持久化对象的变动，每次持久化对象发生变化时 <code>resourceVersion</code> 都会改变。Replace 隐含的竞争策略<strong>乐观锁</strong>就是依靠这个字段实现的，当操作被提交到 K8s 但 <code>resourceVersion</code> 不匹配时，操作会失败。</p>
-<p>Patch 操作直接在对象上修改指定的字段，并且通过 <em>Patch 类型</em>确定修改的方式（合并还是覆盖）。和 Replace 不同的是，Patch 操作竞争策略是 <strong>last-write-wins</strong>，这也意味着不需要先读取对象就可以修改对象。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/05/03/kubernetes-go-client-ssa/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://vizee.org/2022/05/01/go-ci-cd-using-ko/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="vizee">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="/vizee">
-      <meta itemprop="description" content="vegetable is zombie evilest enemy">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | /vizee">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2022/05/01/go-ci-cd-using-ko/" class="post-title-link" itemprop="url">在 Go CI/CD 中使用 ko</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2022-05-01 16:00:49" itemprop="dateCreated datePublished" datetime="2022-05-01T16:00:49+08:00">2022-05-01</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2023-02-21 21:02:53" itemprop="dateModified" datetime="2023-02-21T21:02:53+08:00">2023-02-21</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>Go 项目用的是 GitLab CI/CD + Kubernetes 执行器。之前一直有点慢，最近用 ko 优化了一下流程，记录一下。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/05/01/go-ci-cd-using-ko/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://vizee.org/2022/04/03/neovim-lua-config/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="vizee">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="/vizee">
-      <meta itemprop="description" content="vegetable is zombie evilest enemy">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | /vizee">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2022/04/03/neovim-lua-config/" class="post-title-link" itemprop="url">使用 lua 配置 neovim</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2022-04-03 01:48:00" itemprop="dateCreated datePublished" datetime="2022-04-03T01:48:00+08:00">2022-04-03</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2023-02-21 21:02:53" itemprop="dateModified" datetime="2023-02-21T21:02:53+08:00">2023-02-21</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="neovim-0-4-4-to-0-6-1"><a href="#neovim-0-4-4-to-0-6-1" class="headerlink" title="neovim 0.4.4 to 0.6.1"></a>neovim 0.4.4 to 0.6.1</h1><p>直到 2 月份我用的都是 nvim 0.4.4，去年 0.5 发布的时候没有更新，然后 2 月初直接更新到了 0.6.1，并且把配置改成了 lua，再陆陆续续用了 2 个月，划个水写点东西记一下。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/04/03/neovim-lua-config/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://vizee.org/2021/07/02/implement-echo-server-using-io-uring/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="vizee">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="/vizee">
-      <meta itemprop="description" content="vegetable is zombie evilest enemy">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | /vizee">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2021/07/02/implement-echo-server-using-io-uring/" class="post-title-link" itemprop="url">使用 io_uring 实现 echo server</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2021-07-02 23:33:46" itemprop="dateCreated datePublished" datetime="2021-07-02T23:33:46+08:00">2021-07-02</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2023-07-11 23:05:19" itemprop="dateModified" datetime="2023-07-11T23:05:19+08:00">2023-07-11</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="说点啥"><a href="#说点啥" class="headerlink" title="说点啥"></a>说点啥</h1><p><a href="/2021/06/27/print-stdout-using-io-uring">之前的文章</a>介绍了一下 io_uring 的基本使用流程，实现了打印文本到 stdout，用到的功能比较简单（在 archlinux 的 man 里给了一个更加完整的 stdin/stdout 的 echo 例子）。打印的我是在 5.4 版内核的系统实现的，5.4 的 io_uring 比较简单，支持的 feature 和 op 都不多，目前最新的 5.13 版本，新增了非常多的内容（io_uring.c 文件从 4k 行到 10k 行）。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/07/02/implement-echo-server-using-io-uring/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-  <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" title="下一页" aria-label="下一页" href="/page/2/"><i class="fa fa-angle-right"></i></a>
-  </nav>
 
 </div>
   </main>
