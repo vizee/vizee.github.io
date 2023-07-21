@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 5.4.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" integrity="sha256-HtsXJanqjKTc8vVQjO4YMhiqFoXkfBsjBWcX91T1jr8=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://unpkg.com/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"vizee.org","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.17.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="在 Kubernetes 中运行 Spring Boot 应用Kubernetes (以下简称 K8s) 可以直接运行 Spring Boot 应用，这部分不需要 Spring Cloud 支持。 代码参考 spring-boot-k8s。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring Cloud 与 Kubernetes">
+<meta property="og:url" content="https://vizee.org/2023/07/21/spring-cloud-with-kubernetes/index.html">
+<meta property="og:site_name" content="&#x2F;vizee">
+<meta property="og:description" content="在 Kubernetes 中运行 Spring Boot 应用Kubernetes (以下简称 K8s) 可以直接运行 Spring Boot 应用，这部分不需要 Spring Cloud 支持。 代码参考 spring-boot-k8s。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-07-21T10:59:28.000Z">
+<meta property="article:modified_time" content="2023-07-21T11:00:40.502Z">
+<meta property="article:author" content="vizee">
+<meta property="article:tag" content="java">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://vizee.org/2023/07/21/spring-cloud-with-kubernetes/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://vizee.org/2023/07/21/spring-cloud-with-kubernetes/","path":"2023/07/21/spring-cloud-with-kubernetes/","title":"Spring Cloud 与 Kubernetes"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Spring Cloud 与 Kubernetes | /vizee</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">/vizee</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9C%A8-Kubernetes-%E4%B8%AD%E8%BF%90%E8%A1%8C-Spring-Boot-%E5%BA%94%E7%94%A8"><span class="nav-number">1.</span> <span class="nav-text">在 Kubernetes 中运行 Spring Boot 应用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#K8s-%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%87"><span class="nav-number">1.1.</span> <span class="nav-text">K8s 环境准备</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E5%BB%BA%E5%BA%94%E7%94%A8%E9%95%9C%E5%83%8F"><span class="nav-number">1.2.</span> <span class="nav-text">构建应用镜像</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2"><span class="nav-number">1.3.</span> <span class="nav-text">部署</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Java-%E6%97%B6%E5%8C%BA%E9%97%AE%E9%A2%98"><span class="nav-number">1.3.1.</span> <span class="nav-text">Java 时区问题</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Spring-Cloud-Kubernetes"><span class="nav-number">2.</span> <span class="nav-text">Spring Cloud Kubernetes</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Service-Account"><span class="nav-number">2.1.</span> <span class="nav-text">Service Account</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0%E5%92%8C-LoadBalancer"><span class="nav-number">2.2.</span> <span class="nav-text">服务发现和 LoadBalancer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE"><span class="nav-number">2.3.</span> <span class="nav-text">配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#discovery-server-%E5%92%8C-config-server"><span class="nav-number">2.4.</span> <span class="nav-text">discovery-server 和 config-server</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%80%E5%90%8E"><span class="nav-number">3.</span> <span class="nav-text">最后</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">4.</span> <span class="nav-text">参考</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">vizee</p>
+  <div class="site-description" itemprop="description">vegetable is zombie evilest enemy</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">59</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/vizee" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;vizee" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+    <div class="sidebar-inner sidebar-blogroll">
+      <div class="links-of-blogroll animated">
+        <div class="links-of-blogroll-title"><i class="fa fa-globe fa-fw"></i>
+          链接
+        </div>
+        <ul class="links-of-blogroll-list">
+            <li class="links-of-blogroll-item">
+              <a href="https://kingsamchen.github.io/" title="https:&#x2F;&#x2F;kingsamchen.github.io" rel="noopener" target="_blank">KC</a>
+            </li>
+            <li class="links-of-blogroll-item">
+              <a href="https://powman.org/" title="https:&#x2F;&#x2F;powman.org" rel="noopener" target="_blank">泡面</a>
+            </li>
+        </ul>
+      </div>
+    </div>
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://vizee.org/2023/07/21/spring-cloud-with-kubernetes/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="vizee">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="/vizee">
+      <meta itemprop="description" content="vegetable is zombie evilest enemy">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Spring Cloud 与 Kubernetes | /vizee">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Spring Cloud 与 Kubernetes
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2023-07-21 18:59:28 / 修改时间：19:00:40" itemprop="dateCreated datePublished" datetime="2023-07-21T18:59:28+08:00">2023-07-21</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="在-Kubernetes-中运行-Spring-Boot-应用"><a href="#在-Kubernetes-中运行-Spring-Boot-应用" class="headerlink" title="在 Kubernetes 中运行 Spring Boot 应用"></a>在 Kubernetes 中运行 Spring Boot 应用</h1><p>Kubernetes (以下简称 K8s) 可以直接运行 Spring Boot 应用，这部分不需要 Spring Cloud 支持。</p>
+<p>代码参考 <a target="_blank" rel="noopener" href="https://github.com/vizee/java-demo/tree/main/spring-boot-k8s">spring-boot-k8s</a>。</p>
+<span id="more"></span>
+
+<h2 id="K8s-环境准备"><a href="#K8s-环境准备" class="headerlink" title="K8s 环境准备"></a>K8s 环境准备</h2><p>使用 <a target="_blank" rel="noopener" href="https://kind.sigs.k8s.io/">kind</a> 来创建一个 K8s 集群：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">kind create cluster</span><br><span class="line">kubectl cluster-info --context kind-kind</span><br></pre></td></tr></table></figure>
+
+<h2 id="构建应用镜像"><a href="#构建应用镜像" class="headerlink" title="构建应用镜像"></a>构建应用镜像</h2><p>创建一个简单的 Spring Boot 项目，选择 <code>Spring Web</code> 和 <code>Spring Boot Actuator</code> 依赖，然后随便写两个接口方便测试。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="meta">@SpringBootApplication</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SbkApplication</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@GetMapping(&quot;/hello&quot;)</span></span><br><span class="line">    String <span class="title function_">hello</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;Hello World&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@GetMapping(&quot;/now&quot;)</span></span><br><span class="line">    String <span class="title function_">now</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">var</span> <span class="variable">sdf</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">SimpleDateFormat</span>(<span class="string">&quot;yyyy-MM-dd&#x27;T&#x27;HH:mm:ss.SSSZ&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> sdf.format(<span class="keyword">new</span> <span class="title class_">Date</span>()) + <span class="string">&quot; @&quot;</span> + sdf.getTimeZone().getID();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        SpringApplication.run(SbkApplication.class, args);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>之所以加一个 <code>/now</code> 是为了后续测试时区的问题，Spring Boot Actuator 用来为应用提供探针。</p>
+<p>Spring Boot 构建插件支持直接从项目构建出 Docker 镜像：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mvn spring-boot:build-image</span><br></pre></td></tr></table></figure>
+
+<p>构建容器会去下载一个 JRE 环境，非常抽象，所以我选通过 Dockerfile 来构建镜像：</p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> maven:<span class="number">3.9</span>-eclipse-temurin-<span class="number">17</span>-alpine AS builder</span><br><span class="line"><span class="keyword">ADD</span><span class="language-bash"> . /app</span></span><br><span class="line"><span class="keyword">WORKDIR</span><span class="language-bash"> /app</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> mvn -s settings.xml -f pom.xml -Dmaven.test.skip=<span class="literal">true</span> package</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">FROM</span> eclipse-temurin:<span class="number">17</span>-jre-alpine</span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> --from=builder /app/target/*.jar /app/</span></span><br><span class="line"><span class="keyword">WORKDIR</span><span class="language-bash"> /app</span></span><br><span class="line"><span class="keyword">CMD</span><span class="language-bash"> java -jar app.jar --spring.config.location=./config/application.yml</span></span><br></pre></td></tr></table></figure>
+
+<p>这里我用了 alpine 镜像，纯粹是个人爱好。然后就是构建 Docker 镜像和在 Docker 中运行的命令：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> path/to/project</span><br><span class="line"></span><br><span class="line"><span class="comment"># 构建镜像</span></span><br><span class="line">docker build -t app .</span><br><span class="line"></span><br><span class="line"><span class="comment"># 运行容器</span></span><br><span class="line">docker run -v $(<span class="built_in">pwd</span>)/src/main/resources/application.yml:/app/config/application.yml --network=host app:latest</span><br><span class="line"></span><br><span class="line"><span class="comment"># 测试访问</span></span><br><span class="line">curl localhost:8080/hello</span><br></pre></td></tr></table></figure>
+
+<h2 id="部署"><a href="#部署" class="headerlink" title="部署"></a>部署</h2><p>在 K8s 部署应用是常规操作，除了内存开大一点以外没有什么区别，我在 Demo 项目里给了对应文件，说起来这步要上传镜像到 Registry，不能直接使用本地镜像，我没有深究是不是 namespace 的原因。</p>
+<p>Spring Boot Actuator 提供了开箱即用的 Health Endpoint：<code>/actuator/health/liveness</code> 和 <code>/actuator/health/readiness</code>，作为应用部署在 K8s 需要的健康检测探针，如果有更复杂需求也可以实现 <code>HealthIndicator</code>。</p>
+<blockquote>
+<p>NOTE: 当 Spring 应用运行在 K8s 中时，Spring Boot Actuator 会自动启用这两个探针，你可以通过 <code>management.health.probes.enabled=true</code> 主动启用探针</p>
+</blockquote>
+<h3 id="Java-时区问题"><a href="#Java-时区问题" class="headerlink" title="Java 时区问题"></a>Java 时区问题</h3><p>在 K8s 中给一个容器配置时区最简单的方法是用 <code>hostPath</code> 把 <code>/etc/localtime</code> 到容器中 <code>/etc/localtime</code>，绝大部分应用有这个文件就正确显示时区了，但是 Java 应用不行。Java 应用的时区配置还需要 <code>/etc/timezone</code> 或者环境变量 <code>TZ</code> 设为对应时区，例如 <code>Asia/Shanghai</code>。</p>
+<h1 id="Spring-Cloud-Kubernetes"><a href="#Spring-Cloud-Kubernetes" class="headerlink" title="Spring Cloud Kubernetes"></a>Spring Cloud Kubernetes</h1><p>Spring Cloud 本身是一个微服务框架，在云原生大趋势下也对 K8s 做了支持。Java 有两个 K8s 客户端实现 <a target="_blank" rel="noopener" href="https://github.com/fabric8io/kubernetes-client">Fabric8 Kubernetes Java Client</a> 和 <a target="_blank" rel="noopener" href="https://github.com/kubernetes-client/java">Kubernetes Java Client</a>，它们有各自对应的 Spring Cloud Kubernetes 生态，我这边示例用到的是后者。</p>
+<p>新建一个项目，添加依赖 <code>Spring Web</code>、<code>Spring Boot Actuator</code>、<code>OpenFeign</code>。不知道为什么 Spring Initializr 上不提供添加 K8s 有关的依赖，手动添加 <code>spring-cloud-starter-kubernetes-client-all</code>：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.cloud<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-cloud-starter-kubernetes-client-all<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>spring-cloud-starter-kubernetes-client-all 依赖包含 discovery、loadbalancer 和 config，引入后 Spring 框架会自动激活 <code>kubernetes</code> profile。</p>
+<p>代码参考 <a target="_blank" rel="noopener" href="https://github.com/vizee/java-demo/tree/main/spring-boot-k8s">spring-cloud-k8s</a>。</p>
+<h2 id="Service-Account"><a href="#Service-Account" class="headerlink" title="Service Account"></a>Service Account</h2><p>K8s 通过 Service Account 为 Pod 访问 K8s API 提供身份信息，如果没有指定，默认是 <code>default</code>。</p>
+<p>因为 Spring Cloud Kubernetes 需要访问 API，所以我们要给 Service Account 配置一些权限，这里直接用了 <a target="_blank" rel="noopener" href="https://docs.spring.io/spring-cloud-kubernetes/docs/current/reference/html/#service-account">Spring Cloud Kubernetes 文档</a>中的配置，它为 <code>default</code> Account 增加了几个资源的的 <code>get</code>、<code>list</code>、<code>watch</code> 权限：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">kind:</span> <span class="string">Role</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">rbac.authorization.k8s.io/v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">default</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">namespace-reader</span></span><br><span class="line"><span class="attr">rules:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">apiGroups:</span> [<span class="string">&quot;&quot;</span>]</span><br><span class="line">    <span class="attr">resources:</span> [<span class="string">&quot;configmaps&quot;</span>, <span class="string">&quot;pods&quot;</span>, <span class="string">&quot;services&quot;</span>, <span class="string">&quot;endpoints&quot;</span>, <span class="string">&quot;secrets&quot;</span>]</span><br><span class="line">    <span class="attr">verbs:</span> [<span class="string">&quot;get&quot;</span>, <span class="string">&quot;list&quot;</span>, <span class="string">&quot;watch&quot;</span>]</span><br><span class="line"></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">RoleBinding</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">rbac.authorization.k8s.io/v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">namespace-reader-binding</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">default</span></span><br><span class="line"><span class="attr">subjects:</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">kind:</span> <span class="string">ServiceAccount</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">default</span></span><br><span class="line">  <span class="attr">apiGroup:</span> <span class="string">&quot;&quot;</span></span><br><span class="line"><span class="attr">roleRef:</span></span><br><span class="line">  <span class="attr">kind:</span> <span class="string">Role</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">namespace-reader</span></span><br><span class="line">  <span class="attr">apiGroup:</span> <span class="string">&quot;&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>这么配置只是为了方便使用，不是一个正规的配置，如果在生产环境用还是要按需配置的。</p>
+<h2 id="服务发现和-LoadBalancer"><a href="#服务发现和-LoadBalancer" class="headerlink" title="服务发现和 LoadBalancer"></a>服务发现和 LoadBalancer</h2><p>K8s 本身提供了 Service 管理网络流量，Service 通过 Selector 关联 Endpoint。Spring Cloud 框架也自带了服务发现功能，所以为了结合 K8s，Spring Cloud Kubernetes 服务发现通过调用 K8s API 获得 Service 的 Endpoint，如果 Endpoint 有多个端口，默认选择第一个。</p>
+<p>对服务的访问和其他 Spring Cloud 的区别不大，注意注解 <code>@FeignClient</code> 要写成服务名，而不是应用名称，例如我们使用 OpenFeign 去调用上一节提到的 Spring Boot 应用。</p>
+<p>接口代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@FeignClient(&quot;sbk-app-svc&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">SbkClient</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@GetMapping(&quot;/hello&quot;)</span></span><br><span class="line">    String <span class="title function_">hello</span><span class="params">()</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>调用代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Autowired</span></span><br><span class="line">SbkClient sbkClient;</span><br><span class="line"></span><br><span class="line"><span class="meta">@GetMapping(&quot;/hello&quot;)</span></span><br><span class="line">String <span class="title function_">hello</span><span class="params">()</span> &#123;</span><br><span class="line">    log.info(<span class="string">&quot;call by OpenFeign&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> sbkClient.hello();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Bean</span></span><br><span class="line">RestTemplate <span class="title function_">restTemplate</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">RestTemplate</span>();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@GetMapping(&quot;/now&quot;)</span></span><br><span class="line">String <span class="title function_">now</span><span class="params">()</span> &#123;</span><br><span class="line">    log.info(<span class="string">&quot;call by RestTemplate&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> restTemplate().getForObject(<span class="string">&quot;http://sbk-app-svc:8080/now&quot;</span>, String.class);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>代码还展示了用 RestTemplate 访问其他服务的方式，这种方式下负载均衡只会提供 K8s Service 完成。</p>
+<p>默认情况下，负载均衡使用 <code>POD</code> 模式，Spring Cloud Kubernetes Discovery 通过服务名获取的 Pod IP 列表，服务调用直接访问 Pod（类似 Headless Service 的作法），这是兼容 Spring Cloud 机制的，如果想要直接使用 K8s Service 自带的流量管理，可以把模式改为 <code>SERVICE</code>：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line">  <span class="attr">cloud:</span></span><br><span class="line">    <span class="attr">kubernetes:</span></span><br><span class="line">      <span class="attr">loadbalancer:</span></span><br><span class="line">        <span class="attr">mode:</span> <span class="string">SERVICE</span></span><br></pre></td></tr></table></figure>
+
+<p>服务发现默认工作在当前命名空间，可以通过配置指定命名空间跨命名空间服务发现：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line">  <span class="attr">cloud:</span></span><br><span class="line">    <span class="attr">kubernetes:</span></span><br><span class="line">      <span class="attr">discovery:</span></span><br><span class="line">        <span class="attr">all-namespaces:</span> <span class="literal">false</span></span><br><span class="line">        <span class="attr">namespaces:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">default</span></span><br></pre></td></tr></table></figure>
+
+<p>另外，因为 Service 的 Endpoint 的注册和取消注册由 Pod 生命周期控制，所以 Spring Cloud Kubernetes 不再需要注册服务，这部分机制会被自动屏蔽。</p>
+<h2 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h2><p>之前已经演示过了从 <code>spring.config.location</code> 加载配置文件，接入 K8s 后，框架可以从 ConfigMap 获取应用配置（我这里只谈 ConfigMap，Secret 基本相同）。</p>
+<p>通过设置 <code>spring.config.import=kubernetes:</code> 让应用从 Spring Cloud Kubernetes Config 获得配置，这部分和用其他配置管理中间件很像。加入配置中设置了 <code>spring.application.name</code>，配置客户端会去获取<strong>同名</strong>的 ConfigMap，如果没有设置，客户端获取 <code>application</code> ConfigMap，如果你希望指定其他名字，可以通过 <code>spring.cloud.kubernetes.config.name</code> 直接指定 ConfigMap 名称。</p>
+<p>创建两个 ConfigMap，一个用于启动配置（这一步不是必须的），一个用会被配置客户端自动读取。</p>
+<p>startup-cm.yaml:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ConfigMap</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">sck-app-conf-cm</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">default</span></span><br><span class="line"><span class="attr">data:</span></span><br><span class="line">  <span class="attr">application.yml:</span> <span class="string">|-</span></span><br><span class="line"><span class="string">    spring:</span></span><br><span class="line"><span class="string">      application:</span></span><br><span class="line"><span class="string">        name: &#x27;sck&#x27;</span></span><br><span class="line"><span class="string">      config:</span></span><br><span class="line"><span class="string">        import: &#x27;kubernetes:&#x27;</span></span><br><span class="line"><span class="string">      cloud:</span></span><br><span class="line"><span class="string">        kubernetes:</span></span><br><span class="line"><span class="string">          config:</span></span><br><span class="line"><span class="string">            name: sck-ext-conf-cm</span></span><br></pre></td></tr></table></figure>
+
+<p>app-cm.yaml:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ConfigMap</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">sck-ext-conf-cm</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">default</span></span><br><span class="line"><span class="attr">data:</span></span><br><span class="line">  <span class="attr">application.yaml:</span> <span class="string">|-</span></span><br><span class="line"><span class="string">    app:</span></span><br><span class="line"><span class="string">      version: &#x27;1.0&#x27;</span></span><br><span class="line"><span class="string">    logging:</span></span><br><span class="line"><span class="string">      level:</span></span><br><span class="line"><span class="string">        root: info</span></span><br><span class="line"><span class="string">    management:</span></span><br><span class="line"><span class="string">      endpoints:</span></span><br><span class="line"><span class="string">        web:</span></span><br><span class="line"><span class="string">          exposure:</span></span><br><span class="line"><span class="string">            include: &#x27;*&#x27;</span></span><br><span class="line"><span class="string">    server:</span></span><br><span class="line"><span class="string">      port: 8080</span></span><br><span class="line"><span class="string">    spring:</span></span><br><span class="line"><span class="string">      cloud:</span></span><br><span class="line"><span class="string">        kubernetes:</span></span><br><span class="line"><span class="string">          discovery:</span></span><br><span class="line"><span class="string">            all-namespaces: false</span></span><br><span class="line"><span class="string">            namespaces:</span></span><br><span class="line"><span class="string">              - default</span></span><br><span class="line"><span class="string">          loadbalancer:</span></span><br><span class="line"><span class="string">            mode: SERVICE</span></span><br><span class="line"><span class="string">          reload:</span></span><br><span class="line"><span class="string">            enabled: true</span></span><br></pre></td></tr></table></figure>
+
+<p>通过执行命令查看配置生效情况：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl exec -it pods/sck-app-7b9d868847-6g4zn -- /bin/sh</span><br><span class="line">/app # wget -O - localhost:8080/actuator/env &amp;&amp; cat env</span><br></pre></td></tr></table></figure>
+
+<p>虽然 K8s 会 Pod 挂载的 ConfigMap 文件同步改动，但是 Spring 应用并不监控本地文件，而是使用了 API 获取 configmap。如果应用需要及时配置变更就需要配置 <code>spring.cloud.kubernetes.reload.enabled=true</code>，这样配置客户端就回去 watch configmap，别忘了代码中加上注解 <code>@RefreshScope</code>。此外，配置客户端也支持通过配置 <code>spring.cloud.kubernetes.reload.period</code> 周期性从配置检查变更，文档提到这个功能在文件挂载时是无需权限的。</p>
+<h2 id="discovery-server-和-config-server"><a href="#discovery-server-和-config-server" class="headerlink" title="discovery-server 和 config-server"></a>discovery-server 和 config-server</h2><p>除了框架本身的组件外，Spring Cloud Kubernetes 生态还提供配置服务 spring-cloud-kubernetes-configserver 和发现服务 spring-cloud-kubernetes-discoveryserver。</p>
+<p>spring-cloud-kubernetes-configserver 在 Config Server 基础上增加了对 K8s ConfigMap 和 Secret 支持。有一点比较令人迷惑，Kubernetes Config Server 不支持配置的 watch，有这方面需求的话就要结合 <a target="_blank" rel="noopener" href="https://docs.spring.io/spring-cloud-kubernetes/docs/current/reference/html/#spring-cloud-kubernetes-configuration-watcher">Kubernetes Configuration Watcher</a> 一起使用。</p>
+<p>spring-cloud-kubernetes-discoveryserver 封装了对 K8s Service 访问，你可以直接访问 HTTP API 获取服务 Endpoint，也能使用对应的客户端 spring-cloud-starter-kubernetes-discoveryclient 把服务集成到 Spring Cloud Discovery 能力。</p>
+<p>这两个服务虽然可选，但是我还是比较推荐使用，因为抛开功能还有一点很重要，就是它可以减少对 K8s API Server 的压力。</p>
+<h1 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h1><p>Spring Cloud 到底是一个微服务框架，它和 K8s 结合的方式是通过 K8s 机制的 API 和调整了自身部分的机制，而一个普通的云原生应用应该是在低状态的前提下，也避免和 API 有所交流，所以这是一件很违和的事情。</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://spring.io/blog/2020/01/27/creating-docker-images-with-spring-boot-2-3-0-m1">https://spring.io/blog/2020/01/27/creating-docker-images-with-spring-boot-2-3-0-m1</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.endpoints.kubernetes-probes">https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.endpoints.kubernetes-probes</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-cloud-kubernetes/docs/current/reference/html/">https://docs.spring.io/spring-cloud-kubernetes/docs/current/reference/html/</a></li>
+<li><a target="_blank" rel="noopener" href="https://juejin.cn/post/6844904202372644877">https://juejin.cn/post/6844904202372644877</a></li>
+<li><a target="_blank" rel="noopener" href="https://juejin.cn/post/6844904200443265037">https://juejin.cn/post/6844904200443265037</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.51cto.com/u_2837193/4926721">https://blog.51cto.com/u_2837193/4926721</a></li>
+<li><a target="_blank" rel="noopener" href="https://piotrminkowski.com/2020/09/10/spring-cloud-kubernetes-load-balancer-guide/">https://piotrminkowski.com/2020/09/10/spring-cloud-kubernetes-load-balancer-guide/</a></li>
+<li><a target="_blank" rel="noopener" href="https://blogs.asarkar.com/technical/spring-cloud-config/">https://blogs.asarkar.com/technical/spring-cloud-config/</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/java/" rel="tag"># java</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2023/07/15/spring-cloud-gateway-development/" rel="prev" title="从零放弃学习 Spring - Spring Cloud 网关开发">
+                  <i class="fa fa-chevron-left"></i> 从零放弃学习 Spring - Spring Cloud 网关开发
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2023</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">vizee</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://unpkg.com/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
