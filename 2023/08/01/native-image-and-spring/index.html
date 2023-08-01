@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 5.4.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" integrity="sha256-HtsXJanqjKTc8vVQjO4YMhiqFoXkfBsjBWcX91T1jr8=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://unpkg.com/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"vizee.org","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.17.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="GraalVM Native ImageGraalVM 是 Oracle 开发的 JDK，本身就提供了更好性能的 JVM，GraalVM Native Image 可以通过 AOT 把 Java 代码直接编译成二进制可执行文件，编译后的二进制不再依赖 JVM，更快的启动速度，更小的运行内存，并且不会对性能有大影响。 Native Image 会执行静态分析，从应用入口（即 main）开始，找到所有">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Native Image 与 Spring">
+<meta property="og:url" content="https://vizee.org/2023/08/01/native-image-and-spring/index.html">
+<meta property="og:site_name" content="&#x2F;vizee">
+<meta property="og:description" content="GraalVM Native ImageGraalVM 是 Oracle 开发的 JDK，本身就提供了更好性能的 JVM，GraalVM Native Image 可以通过 AOT 把 Java 代码直接编译成二进制可执行文件，编译后的二进制不再依赖 JVM，更快的启动速度，更小的运行内存，并且不会对性能有大影响。 Native Image 会执行静态分析，从应用入口（即 main）开始，找到所有">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-08-01T13:11:03.000Z">
+<meta property="article:modified_time" content="2023-08-01T13:12:06.205Z">
+<meta property="article:author" content="vizee">
+<meta property="article:tag" content="java">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://vizee.org/2023/08/01/native-image-and-spring/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://vizee.org/2023/08/01/native-image-and-spring/","path":"2023/08/01/native-image-and-spring/","title":"Native Image 与 Spring"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Native Image 与 Spring | /vizee</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">/vizee</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#GraalVM-Native-Image"><span class="nav-number">1.</span> <span class="nav-text">GraalVM Native Image</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Native-Image-%E6%9E%84%E5%BB%BA-GRPC-%E5%BA%94%E7%94%A8"><span class="nav-number">2.</span> <span class="nav-text">Native Image 构建 GRPC 应用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Build-Configuration"><span class="nav-number">3.</span> <span class="nav-text">Build Configuration</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%83%E6%95%B0%E6%8D%AE%E9%85%8D%E7%BD%AE"><span class="nav-number">3.1.</span> <span class="nav-text">元数据配置</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Native-Image-%E6%9E%84%E5%BB%BA-Spring-Boot-%E5%BA%94%E7%94%A8"><span class="nav-number">4.</span> <span class="nav-text">Native Image 构建 Spring Boot 应用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#PGO"><span class="nav-number">5.</span> <span class="nav-text">PGO</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%80%E5%90%8E"><span class="nav-number">6.</span> <span class="nav-text">最后</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">vizee</p>
+  <div class="site-description" itemprop="description">vegetable is zombie evilest enemy</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/vizee" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;vizee" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+    <div class="sidebar-inner sidebar-blogroll">
+      <div class="links-of-blogroll animated">
+        <div class="links-of-blogroll-title"><i class="fa fa-globe fa-fw"></i>
+          链接
+        </div>
+        <ul class="links-of-blogroll-list">
+            <li class="links-of-blogroll-item">
+              <a href="https://kingsamchen.github.io/" title="https:&#x2F;&#x2F;kingsamchen.github.io" rel="noopener" target="_blank">KC</a>
+            </li>
+            <li class="links-of-blogroll-item">
+              <a href="https://powman.org/" title="https:&#x2F;&#x2F;powman.org" rel="noopener" target="_blank">泡面</a>
+            </li>
+        </ul>
+      </div>
+    </div>
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://vizee.org/2023/08/01/native-image-and-spring/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="vizee">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="/vizee">
+      <meta itemprop="description" content="vegetable is zombie evilest enemy">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Native Image 与 Spring | /vizee">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Native Image 与 Spring
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2023-08-01 21:11:03 / 修改时间：21:12:06" itemprop="dateCreated datePublished" datetime="2023-08-01T21:11:03+08:00">2023-08-01</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="GraalVM-Native-Image"><a href="#GraalVM-Native-Image" class="headerlink" title="GraalVM Native Image"></a>GraalVM Native Image</h1><p>GraalVM 是 Oracle 开发的 JDK，本身就提供了更好性能的 JVM，GraalVM Native Image 可以通过 AOT 把 Java 代码直接编译成二进制可执行文件，编译后的二进制不再依赖 JVM，更快的启动速度，更小的运行内存，并且不会对性能有大影响。</p>
+<p>Native Image 会执行静态分析，从应用入口（即 main）开始，找到所有会被访问的方法，并且只会编译找到的代码。完全按照 JVM 执行的逻辑去静态分析是不现实的，所以 Native Image 静态分析基于一个叫*封闭世界假设(closed-world assumption)*的约束：只考虑构建时的已知代码，不允许在运行时增加加载新代码。</p>
+<p>下载安装 GraalVM 后你还需要安装必要的构建工具和 z-lib，例如 Ubuntu 下：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install build-essential zlib1g-dev</span><br></pre></td></tr></table></figure>
+
+<span id="more"></span>
+
+<h1 id="Native-Image-构建-GRPC-应用"><a href="#Native-Image-构建-GRPC-应用" class="headerlink" title="Native Image 构建 GRPC 应用"></a>Native Image 构建 GRPC 应用</h1><p>完整代码参考 <a target="_blank" rel="noopener" href="https://github.com/vizee/java-demo/tree/main/native-grpc">native-grpc</a>。</p>
+<p>代码基本上就是 <a target="_blank" rel="noopener" href="https://github.com/vizee/java-demo/tree/main/grpc-from-scratch">grpc-from-scratch</a>，为了 Native Image 编译简单，去掉了 logback。</p>
+<p>对于这种比较简单的项目，只需要简单修改 pom.xml 就可以了：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">build</span>&gt;</span></span><br><span class="line">    ...</span><br><span class="line">    <span class="tag">&lt;<span class="name">plugins</span>&gt;</span></span><br><span class="line">        ...</span><br><span class="line">        <span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.graalvm.buildtools<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>native-maven-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">version</span>&gt;</span>0.9.22<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">mainClass</span>&gt;</span>org.example.Main<span class="tag">&lt;/<span class="name">mainClass</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">buildArgs</span>&gt;</span></span><br><span class="line">                    --initialize-at-run-time=io.netty.handler.ssl.BouncyCastleAlpnSslUtils</span><br><span class="line">                <span class="tag">&lt;/<span class="name">buildArgs</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">plugins</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">build</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>使用 Maven 构建可执行文件：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mvn native:compile</span><br></pre></td></tr></table></figure>
+
+<p>这里有一个参数 <code>--initialize-at-run-time=io.netty.handler.ssl.BouncyCastleAlpnSslUtils</code>，如果不加上的话会出现 <code>Unable to initialize BouncyCastleAlpnSslUtils</code> 异常。不过因为我们代码里没有使用加密，这个异常不会影响代码正常运行。关于 run-time 和 build-time 概念我就不翻译文档了，参考 <a target="_blank" rel="noopener" href="https://www.graalvm.org/latest/reference-manual/native-image/basics/#build-time-vs-run-time">Build Time vs Run Time</a>。</p>
+<blockquote>
+<p>在日常开发时可以加入 <code>-Ob</code> 构建参数加速构建</p>
+</blockquote>
+<h1 id="Build-Configuration"><a href="#Build-Configuration" class="headerlink" title="Build Configuration"></a>Build Configuration</h1><p>Native Image 可以通过 Build Configuration 指示正确的构建行为。</p>
+<p>官方推荐的布局如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">META-INF/</span><br><span class="line">└── native-image</span><br><span class="line">    └── groupID</span><br><span class="line">        └── artifactID</span><br><span class="line">            └── native-image.properties</span><br></pre></td></tr></table></figure>
+
+<p>Native Image 构建会扫描 <code>META-INF/native-image</code> 目录下的构建配置 <code>native-image.properties</code>，使用 <em>groupID</em> 和 <em>artifactID</em> 是为了多个模块都可能生成各自的配置文件，构建时要避免它们产生冲突，但很扯的是，如果你按照这个方式放置你自己项目需要的构建配置，可能会和插件为你的项目生产的配置文件冲突。</p>
+<h2 id="元数据配置"><a href="#元数据配置" class="headerlink" title="元数据配置"></a>元数据配置</h2><p>Native Image 静态分析没办法处理 Java 动态特性，如果用到了<a target="_blank" rel="noopener" href="https://www.graalvm.org/latest/reference-manual/native-image/metadata/#specifying-metadata-with-json">这些动态特性</a>，要在构建配置中添加对元数据的配置。</p>
+<p>当然，手动编写这类配置是非常繁琐的，所以 GraalVM 提供了一个 Agent 自动收集元数据信息，并且生成对应的配置文件，使用方法如下：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mvn package</span><br><span class="line"><span class="built_in">cd</span> target/</span><br><span class="line">java -agentlib:native-image-agent=config-output-dir=./out-config -jar xxx.jar</span><br></pre></td></tr></table></figure>
+
+<p>上面命令会把结果生成到 target/out-config 下，把这些文件复制到 <code>META-INF/native-image</code> 下就可以了。</p>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://www.graalvm.org/latest/reference-manual/native-image/metadata/AutomaticMetadataCollection/#tracing-agent">官方文档</a> 中建议结合 <code>config-merge-dir</code> 多次执行以覆盖到更全面的动态特性。</p>
+</blockquote>
+<h1 id="Native-Image-构建-Spring-Boot-应用"><a href="#Native-Image-构建-Spring-Boot-应用" class="headerlink" title="Native Image 构建 Spring Boot 应用"></a>Native Image 构建 Spring Boot 应用</h1><p>像 Spring 这样的框架往往就会用到很多动态特性，所以会涉及到大量构建配置，好在 Spring 已经<a target="_blank" rel="noopener" href="https://docs.spring.io/spring-boot/docs/current/reference/html/native-image.html">支持 Native Image</a>，只需要引入 <code>GraalVM Native Support</code> 构建插件，开箱即用：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mvn -Pnative native:compile</span><br></pre></td></tr></table></figure>
+
+<p>指定 <code>native</code> Profile，Spring 构建插件会在构建时自动生成需要的元数据配置，无需任何额外配置。</p>
+<p>除了上面这种方式构建 Spring 项目为可执行文件，Spring 构建插件还支持直接构建出含可执行文件的 docker 镜像：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mvn -Pnative spring-boot:build-image</span><br></pre></td></tr></table></figure>
+
+<p>使用这种方式构建（默认）会下载 <code>paketobuildpacks/builder:tiny</code> 镜像作为 builder 镜像，并且它自己会准备一套构建环境，例如 BellSoft Liberica JDK，native-image 等等，构建完成后还会基于 <code>paketobuildpacks/run:tiny-cnb</code> 镜像制作应用镜像，paketobuildpacks/run 是一个类似 distroless 的精简镜像，最后进程运行在用户 1000 上。</p>
+<h1 id="PGO"><a href="#PGO" class="headerlink" title="PGO"></a>PGO</h1><p>Native Image 支持 PGO，虽然官方文档中说社区版不可用。</p>
+<p>下面是<a target="_blank" rel="noopener" href="https://github.com/oracle/graal/blob/master/docs/reference-manual/native-image/guides/optimize-native-executable-with-pgo.md">官方文档</a>中示例代码的运行结果，运行环境是腾讯云 S6.2XLARGE16，SDK 是 graalvm-jdk-17.0.8+9.1（不用在意数据，我在后面总结了）：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line">$ javac Streams.java</span><br><span class="line">$ java Streams 100000 200</span><br><span class="line">Iteration 1 finished in 227 milliseconds with checksum e6e0b70aee921601</span><br><span class="line">Iteration 2 finished in 79 milliseconds with checksum e6e0b70aee921601</span><br><span class="line">Iteration 3 finished in 39 milliseconds with checksum e6e0b70aee921601</span><br><span class="line">...</span><br><span class="line">Iteration 6 finished in 28 milliseconds with checksum e6e0b70aee921601</span><br><span class="line">...</span><br><span class="line">Iteration 9 finished in 22 milliseconds with checksum e6e0b70aee921601</span><br><span class="line">...</span><br><span class="line">Iteration 20 finished in 31 milliseconds with checksum e6e0b70aee921601</span><br><span class="line">TOTAL time: 859</span><br><span class="line"></span><br><span class="line">$ native-image Streams</span><br><span class="line">$ ./streams 100000 200</span><br><span class="line">Iteration 1 finished in 163 milliseconds with checksum e6e0b70aee921601</span><br><span class="line">...</span><br><span class="line">Iteration 5 finished in 144 milliseconds with checksum e6e0b70aee921601</span><br><span class="line">...</span><br><span class="line">Iteration 20 finished in 147 milliseconds with checksum e6e0b70aee921601</span><br><span class="line">TOTAL time: 2952</span><br><span class="line"></span><br><span class="line">$ native-image --pgo-instrument Streams</span><br><span class="line">$ ./streams 100000 20</span><br><span class="line">Iteration 1 finished in 416 milliseconds with checksum e6e0b70aee921601</span><br><span class="line">...</span><br><span class="line">Iteration 4 finished in 399 milliseconds with checksum e6e0b70aee921601</span><br><span class="line">...</span><br><span class="line">Iteration 20 finished in 401 milliseconds with checksum e6e0b70aee921601</span><br><span class="line">TOTAL time: 8019</span><br><span class="line"></span><br><span class="line">$ native-image --pgo=default.iprof Streams</span><br><span class="line">$ ./streams 100000 200</span><br><span class="line">Iteration 1 finished in 31 milliseconds with checksum e6e0b70aee921601</span><br><span class="line">...</span><br><span class="line">Iteration 3 finished in 30 milliseconds with checksum e6e0b70aee921601</span><br><span class="line">...</span><br><span class="line">Iteration 20 finished in 31 milliseconds with checksum e6e0b70aee921601</span><br><span class="line">TOTAL time: 613</span><br><span class="line"></span><br><span class="line">$ native-image Streams --gc=G1 -march=native</span><br><span class="line">$ ./streams 100000 200</span><br><span class="line">Iteration 1 finished in 169 milliseconds with checksum e6e0b70aee921601</span><br><span class="line">...</span><br><span class="line">Iteration 5 finished in 156 milliseconds with checksum e6e0b70aee921601</span><br><span class="line">...</span><br><span class="line">Iteration 20 finished in 157 milliseconds with checksum e6e0b70aee921601</span><br><span class="line">TOTAL time: 3194</span><br><span class="line"></span><br><span class="line">$ native-image --pgo-instrument Streams --gc=G1 -march=native</span><br><span class="line">$ ./streams 100000 200</span><br><span class="line">Iteration 1 finished in 433 milliseconds with checksum e6e0b70aee921601</span><br><span class="line">...</span><br><span class="line">Iteration 8 finished in 415 milliseconds with checksum e6e0b70aee921601</span><br><span class="line">...</span><br><span class="line">Iteration 20 finished in 417 milliseconds with checksum e6e0b70aee921601</span><br><span class="line">TOTAL time: 8430</span><br><span class="line"></span><br><span class="line">$ native-image --pgo=default.iprof Streams --gc=G1 -march=native</span><br><span class="line">$ ./streams 100000 200</span><br><span class="line">Iteration 1 finished in 35 milliseconds with checksum e6e0b70aee921601</span><br><span class="line">...</span><br><span class="line">Iteration 4 finished in 34 milliseconds with checksum e6e0b70aee921601</span><br><span class="line">...</span><br><span class="line">Iteration 20 finished in 35 milliseconds with checksum e6e0b70aee921601</span><br><span class="line">TOTAL time: 693</span><br></pre></td></tr></table></figure>
+
+<p>可以看到 GraalVM JIT 的性能极限是 22ms，PGO 前耗时 141-159ms，PGO 后耗时完全稳定在 30-31ms。我还测了使用 <code>--gc=G1</code> 和 <code>-march=native</code> 的情况，如果单用任何一个选项，性能是不会有大变化的，但是两个选项一起用以后，性能下降了一点，这点让我非常疑惑。</p>
+<p><code>--pgo-instrument</code> 为了生成 default.iprof，但是在一次测试中我发现 checksum 值变了，不知道是什么原因。</p>
+<p>代码参考 <a target="_blank" rel="noopener" href="https://github.com/vizee/java-demo/tree/main/native-pgo">native-pgo</a>。</p>
+<h1 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h1><p>根据我之前测试的观察，Native Image 构建后的可执行文件启动内测开销 60MiB，对应 JVM 上运行时 210MiB，执行过 bench 后 Native Image 版内存 80MiB，对应 JVM 上 600MiB，虽然性能会比 JIT 极限性能差，至少内存节约上时非常可观的。</p>
+<p>不过 Native Image 在构建时 CPU 和内存开销非常大，云上 8 核 16GiB 机器构建一个简单的 GRPC 的应用，native-image 执行耗时 2min（其中大部分时间 CPU 处于满负荷），最高时内存开销 5GiB。如果想在 CI 中集成也必须考虑到构建机器的成本，并发任务的限制还有其他开销。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/java/" rel="tag"># java</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2023/07/21/spring-cloud-with-kubernetes/" rel="prev" title="从零放弃学习 Spring - Spring Cloud 与 Kubernetes">
+                  <i class="fa fa-chevron-left"></i> 从零放弃学习 Spring - Spring Cloud 与 Kubernetes
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2023</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">vizee</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://unpkg.com/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

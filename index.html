@@ -122,7 +122,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">59</span>
+          <span class="site-state-item-count">60</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -164,6 +164,86 @@
     </div>
 
     <div class="main-inner index posts-expand">
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://vizee.org/2023/08/01/native-image-and-spring/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="vizee">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="/vizee">
+      <meta itemprop="description" content="vegetable is zombie evilest enemy">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="undefined | /vizee">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2023/08/01/native-image-and-spring/" class="post-title-link" itemprop="url">Native Image 与 Spring</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2023-08-01 21:11:03 / 修改时间：21:12:06" itemprop="dateCreated datePublished" datetime="2023-08-01T21:11:03+08:00">2023-08-01</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h1 id="GraalVM-Native-Image"><a href="#GraalVM-Native-Image" class="headerlink" title="GraalVM Native Image"></a>GraalVM Native Image</h1><p>GraalVM 是 Oracle 开发的 JDK，本身就提供了更好性能的 JVM，GraalVM Native Image 可以通过 AOT 把 Java 代码直接编译成二进制可执行文件，编译后的二进制不再依赖 JVM，更快的启动速度，更小的运行内存，并且不会对性能有大影响。</p>
+<p>Native Image 会执行静态分析，从应用入口（即 main）开始，找到所有会被访问的方法，并且只会编译找到的代码。完全按照 JVM 执行的逻辑去静态分析是不现实的，所以 Native Image 静态分析基于一个叫*封闭世界假设(closed-world assumption)*的约束：只考虑构建时的已知代码，不允许在运行时增加加载新代码。</p>
+<p>下载安装 GraalVM 后你还需要安装必要的构建工具和 z-lib，例如 Ubuntu 下：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install build-essential zlib1g-dev</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/08/01/native-image-and-spring/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
 
     
 
@@ -898,89 +978,6 @@
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2022/05/01/go-ci-cd-using-ko/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://vizee.org/2022/04/03/neovim-lua-config/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="vizee">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="/vizee">
-      <meta itemprop="description" content="vegetable is zombie evilest enemy">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | /vizee">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2022/04/03/neovim-lua-config/" class="post-title-link" itemprop="url">使用 lua 配置 neovim</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2022-04-03 01:48:00" itemprop="dateCreated datePublished" datetime="2022-04-03T01:48:00+08:00">2022-04-03</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2023-02-21 21:02:53" itemprop="dateModified" datetime="2023-02-21T21:02:53+08:00">2023-02-21</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="neovim-0-4-4-to-0-6-1"><a href="#neovim-0-4-4-to-0-6-1" class="headerlink" title="neovim 0.4.4 to 0.6.1"></a>neovim 0.4.4 to 0.6.1</h1><p>直到 2 月份我用的都是 nvim 0.4.4，去年 0.5 发布的时候没有更新，然后 2 月初直接更新到了 0.6.1，并且把配置改成了 lua，再陆陆续续用了 2 个月，划个水写点东西记一下。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/04/03/neovim-lua-config/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
