@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 5.4.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" integrity="sha256-HtsXJanqjKTc8vVQjO4YMhiqFoXkfBsjBWcX91T1jr8=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://unpkg.com/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"vizee.org","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.17.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="基于 Bouncy Castle 的 RSA 实现加解密我的开发环境是 Oracle GraalVM 17.0.8+9.1，Linux x64。 完整代码参考 native-bc。 加密代码就不贴了，参考我的仓库代码，只需要执行： 1make deps keys run">
+<meta property="og:type" content="article">
+<meta property="og:title" content="在 Native Image 中使用 Bouncy Castle">
+<meta property="og:url" content="https://vizee.org/2023/08/02/bouncy-castle-on-native-image/index.html">
+<meta property="og:site_name" content="&#x2F;vizee">
+<meta property="og:description" content="基于 Bouncy Castle 的 RSA 实现加解密我的开发环境是 Oracle GraalVM 17.0.8+9.1，Linux x64。 完整代码参考 native-bc。 加密代码就不贴了，参考我的仓库代码，只需要执行： 1make deps keys run">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-08-01T16:16:32.000Z">
+<meta property="article:modified_time" content="2023-08-01T16:18:20.618Z">
+<meta property="article:author" content="vizee">
+<meta property="article:tag" content="java">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://vizee.org/2023/08/02/bouncy-castle-on-native-image/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://vizee.org/2023/08/02/bouncy-castle-on-native-image/","path":"2023/08/02/bouncy-castle-on-native-image/","title":"在 Native Image 中使用 Bouncy Castle"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>在 Native Image 中使用 Bouncy Castle | /vizee</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">/vizee</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E-Bouncy-Castle-%E7%9A%84-RSA-%E5%AE%9E%E7%8E%B0%E5%8A%A0%E8%A7%A3%E5%AF%86"><span class="nav-number">1.</span> <span class="nav-text">基于 Bouncy Castle 的 RSA 实现加解密</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Fallback-Image"><span class="nav-number">2.</span> <span class="nav-text">Fallback Image</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Image-heap-writing-found-a-class-not-seen-during-static-analysis%E2%80%A6"><span class="nav-number">3.</span> <span class="nav-text">Image heap writing found a class not seen during static analysis…</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#no-such-algorithm-RSA-for-provider-BC%E2%80%A6"><span class="nav-number">4.</span> <span class="nav-text">no such algorithm: RSA for provider BC…</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-org-graalvm-nativeimage-hosted-Feature-%E5%9C%A8%E6%9E%84%E5%BB%BA%E6%97%B6%E6%89%A7%E8%A1%8C%E4%BB%A3%E7%A0%81"><span class="nav-number">4.1.</span> <span class="nav-text">使用 org.graalvm.nativeimage.hosted.Feature 在构建时执行代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%9A%E8%BF%87-java-security-%E6%B3%A8%E5%86%8C-Security-Provider"><span class="nav-number">4.2.</span> <span class="nav-text">通过 java.security 注册 Security Provider</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#JCE-cannot-authenticate-the-provider-BC%E2%80%A6"><span class="nav-number">5.</span> <span class="nav-text">JCE cannot authenticate the provider BC…</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%80%E5%90%8E"><span class="nav-number">6.</span> <span class="nav-text">最后</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">7.</span> <span class="nav-text">参考</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">vizee</p>
+  <div class="site-description" itemprop="description">vegetable is zombie evilest enemy</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">61</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/vizee" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;vizee" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+    <div class="sidebar-inner sidebar-blogroll">
+      <div class="links-of-blogroll animated">
+        <div class="links-of-blogroll-title"><i class="fa fa-globe fa-fw"></i>
+          链接
+        </div>
+        <ul class="links-of-blogroll-list">
+            <li class="links-of-blogroll-item">
+              <a href="https://kingsamchen.github.io/" title="https:&#x2F;&#x2F;kingsamchen.github.io" rel="noopener" target="_blank">KC</a>
+            </li>
+            <li class="links-of-blogroll-item">
+              <a href="https://powman.org/" title="https:&#x2F;&#x2F;powman.org" rel="noopener" target="_blank">泡面</a>
+            </li>
+        </ul>
+      </div>
+    </div>
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://vizee.org/2023/08/02/bouncy-castle-on-native-image/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="vizee">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="/vizee">
+      <meta itemprop="description" content="vegetable is zombie evilest enemy">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="在 Native Image 中使用 Bouncy Castle | /vizee">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          在 Native Image 中使用 Bouncy Castle
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2023-08-02 00:16:32 / 修改时间：00:18:20" itemprop="dateCreated datePublished" datetime="2023-08-02T00:16:32+08:00">2023-08-02</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="基于-Bouncy-Castle-的-RSA-实现加解密"><a href="#基于-Bouncy-Castle-的-RSA-实现加解密" class="headerlink" title="基于 Bouncy Castle 的 RSA 实现加解密"></a>基于 Bouncy Castle 的 RSA 实现加解密</h1><p>我的开发环境是 Oracle GraalVM 17.0.8+9.1，Linux x64。</p>
+<p>完整代码参考 <a target="_blank" rel="noopener" href="https://github.com/vizee/java-demo/tree/main/native-bc">native-bc</a>。</p>
+<p>加密代码就不贴了，参考我的仓库代码，只需要执行：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make deps keys run</span><br></pre></td></tr></table></figure>
+
+<span id="more"></span>
+
+<h1 id="Fallback-Image"><a href="#Fallback-Image" class="headerlink" title="Fallback Image"></a>Fallback Image</h1><p>在上面环境基础上，执行命令构建 Native Image：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">make native</span><br><span class="line">./rsa</span><br></pre></td></tr></table></figure>
+
+<p>这一步虽然构建出了可执行文件并且也可以正常运行，但请注意控制台输出：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Warning: Image &#x27;rsa&#x27; is a fallback image that requires a JDK for execution (use --no-fallback to suppress fallback image generation and to print more detailed information why a fallback image was necessary).</span><br></pre></td></tr></table></figure>
+
+<p>不难看出，Native Image 为了做到最大兼容性，默认情况下构建出来的可执行文件可能仍然依赖 JDK，如果想要生成不依赖 JDK 的可执行文件，还需要增加一个 <code>--no-fallback</code> 参数。</p>
+<h1 id="Image-heap-writing-found-a-class-not-seen-during-static-analysis…"><a href="#Image-heap-writing-found-a-class-not-seen-during-static-analysis…" class="headerlink" title="Image heap writing found a class not seen during static analysis…"></a>Image heap writing found a class not seen during static analysis…</h1><p>为了构建不依赖 JDK 的可执行文件，尝试执行 <code>make native-no-fallback</code> 构建，然后出现异常：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt; com.oracle.svm.core.util.VMError$HostedError: com.oracle.svm.core.util.UserError$UserException: Image heap writing found a class not seen during static analysis. Did a static field or an object referenced from a static field change during native image generation? For example, a lazily initialized cache could have been initialized during image generation, in which case you need to force eager initialization of the cache before static analysis or reset the cache using a field value recomputation.</span><br><span class="line">    class: sun.security.x509.X509CertImpl</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>这个异常应该是一个 <a target="_blank" rel="noopener" href="https://github.com/oracle/graal/issues/6793">Bug</a>，我目前没找到<strong>正确</strong>的解决方法，包括添加元数据配置，有一个可以不出现异常的办法是把 GraalVM 回滚到 22.X 版本。顺便一提，GraalVM 目前命名已经变成 GraalVM Oracle JDK 了，所以版本直接跟着官方的版本走，早期则是年份作为大版本，比如 2022 发布的版本为 GraalVM 22.X。</p>
+<p>实际上，经过我测试发现还有一种可以在当前版本绕过这个异常的办法，就是使用 Spring Boot 框架构建 Native Image（我只测试过 Spring Boot 框架，没有测试过其他框架）。其实我也不理解为什么 Spring Boot 构建可以避免上述的异常。</p>
+<h1 id="no-such-algorithm-RSA-for-provider-BC…"><a href="#no-such-algorithm-RSA-for-provider-BC…" class="headerlink" title="no such algorithm: RSA for provider BC…"></a>no such algorithm: RSA for provider BC…</h1><p>参考项目代码 <a target="_blank" rel="noopener" href="https://github.com/vizee/java-demo/tree/main/native-spring-bc">native-spring-bc</a>。</p>
+<p>把 RSA 加解密代码移入 Spring Boot 项目，使用 <code>mvn -Pnative native:compile</code> 顺利构建出了可执行文件，但是运行时又出现了一个新异常：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Exception in thread &quot;main&quot; org.bouncycastle.openssl.PEMException: unable to convert key pair: no such algorithm: RSA for provider BC</span><br><span class="line">	at org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter.getPublicKey(Unknown Source)</span><br><span class="line">	at com.example.nativebc.NativeBcApplication.decodePublicKey(NativeBcApplication.java:47)</span><br><span class="line">	at com.example.nativebc.NativeBcApplication.main(NativeBcApplication.java:62)</span><br><span class="line">Caused by: java.security.NoSuchAlgorithmException: no such algorithm: RSA for provider BC</span><br><span class="line">	at java.base@17.0.8/sun.security.jca.GetInstance.getService(GetInstance.java:87)</span><br><span class="line">	at java.base@17.0.8/sun.security.jca.GetInstance.getInstance(GetInstance.java:206)</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>这是因为 Native Image 的 Security Provider 都是在构建期间确定的，不能在运行期间注册。这里分享两种可以在构建期间注册 Security Provider 的方式。</p>
+<h2 id="使用-org-graalvm-nativeimage-hosted-Feature-在构建时执行代码"><a href="#使用-org-graalvm-nativeimage-hosted-Feature-在构建时执行代码" class="headerlink" title="使用 org.graalvm.nativeimage.hosted.Feature 在构建时执行代码"></a>使用 org.graalvm.nativeimage.hosted.Feature 在构建时执行代码</h2><p>这个方法参考自 <a target="_blank" rel="noopener" href="https://github.com/insinfo/java_native">insinfo/java_native</a>。</p>
+<p>首先需要添加一个依赖：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.graalvm.sdk<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>graal-sdk<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">version</span>&gt;</span>23.0.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">scope</span>&gt;</span>provided<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>然后创建 <code>BouncyCastleFeature</code> 类实现 <code>org.graalvm.nativeimage.hosted.Feature</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.example.nativebc;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.bouncycastle.jce.provider.BouncyCastleProvider;</span><br><span class="line"><span class="keyword">import</span> org.graalvm.nativeimage.hosted.Feature;</span><br><span class="line"><span class="keyword">import</span> org.graalvm.nativeimage.hosted.RuntimeClassInitialization;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.security.Security;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BouncyCastleFeature</span> <span class="keyword">implements</span> <span class="title class_">Feature</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">afterRegistration</span><span class="params">(AfterRegistrationAccess access)</span> &#123;</span><br><span class="line">        RuntimeClassInitialization.initializeAtBuildTime(<span class="string">&quot;org.bouncycastle&quot;</span>);</span><br><span class="line">        RuntimeClassInitialization.initializeAtRunTime(<span class="string">&quot;org.bouncycastle.jcajce.provider.drbg.DRBG$Default&quot;</span>);</span><br><span class="line">        RuntimeClassInitialization.initializeAtRunTime(<span class="string">&quot;org.bouncycastle.jcajce.provider.drbg.DRBG$NonceAndIV&quot;</span>);</span><br><span class="line">        Security.addProvider(<span class="keyword">new</span> <span class="title class_">BouncyCastleProvider</span>());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个 Feature 会在构建时做这几件事：</p>
+<ul>
+<li>把 <code>org.bouncycastle</code> 下所有子包都标记为构建时初始化</li>
+<li>单独标记两个需要运行时初始化的类</li>
+<li>注册 BouncyCastleProvider</li>
+</ul>
+<p>还没完，创建构建配置 <code>META-INF/native-image/native-image.properties</code>，启用自定义的 Feature：</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">Args</span> = <span class="string">--features=com.example.nativebc.BouncyCastleFeature</span></span><br></pre></td></tr></table></figure>
+
+<p>然后执行命令：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mvn -Pnative native:compile</span><br></pre></td></tr></table></figure>
+
+<p>会观察到构建时输出：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">[1/8] Initializing...</span><br><span class="line">...</span><br><span class="line"> 2 user-specific feature(s)</span><br><span class="line"> - com.example.nativebc.BouncyCastleFeature</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>这说明自定义的 Feature 生效了，顺利的话你可以在 <code>target/</code> 目录下找到可以正常执行的 <code>nativebc</code>。</p>
+<p>完整代码参考 <a target="_blank" rel="noopener" href="https://github.com/vizee/java-demo/tree/main/native-spring-bc">native-spring-bc</a>。</p>
+<h2 id="通过-java-security-注册-Security-Provider"><a href="#通过-java-security-注册-Security-Provider" class="headerlink" title="通过 java.security 注册 Security Provider"></a>通过 java.security 注册 Security Provider</h2><p>上面是通过 Feature 机制，在构建期间完成 Security Provider 的注册，需要引入官方的 SDK 和指定 Feature。官方文档 [JCA Security Services in Native Image] 中提到了另外一种注册 Security Provider 的办法，就是修改 <code>java.security</code> 文件。Native Image 构建时会从 java.security 读取预定义的 Provider 并按顺序加载。</p>
+<p>查看 GraalVM 的 java.security 文件：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ rg &#x27;security.provider.\d+&#x27; $GRAALVM_HOME/conf/security/java.security</span><br><span class="line">66:security.provider.1=SUN</span><br><span class="line">67:security.provider.2=SunRsaSign</span><br><span class="line">...</span><br><span class="line">77:security.provider.12=SunPKCS11</span><br></pre></td></tr></table></figure>
+
+<p>java.security 文件内容开头的注释也向开发者说明了添加 Provider 的办法，也就是直接把 BC 的 Provider 追加到这个列表后面就可以了：</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">security.provider.13</span>=<span class="string">org.bouncycastle.jce.provider.BouncyCastleProvider</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>NOTE: 虽然 Native Image 不支持运行时注册 Security Provider，但是对于已经注册的 Provider，允许 removeProvider 以后根据自己想要的顺序重新 addProvider/insertProviderAt</p>
+</blockquote>
+<p>在 java.security 中添加 Provider 相对于前文 Feature 代码中的 <code>Security.addProvider</code>，所以还要通过配置 <code>META-INF/native-image/native-image.properties</code> 完成 Feature 代码中另外两个功能：</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">Args</span> = <span class="string">--initialize-at-build-time=org.bouncycastle \</span></span><br><span class="line"><span class="string">--initialize-at-run-time=org.bouncycastle.jcajce.provider.drbg.DRBG$Default,org.bouncycastle.jcajce.provider.drbg.DRBG$NonceAndIV</span></span><br></pre></td></tr></table></figure>
+
+<p>配置完成后就是构建和运行测试，没有意外的情况下不会有意外。</p>
+<p>补充一下，如果不想修改 GraalVM JDK 中的配置文件，可以通过添加构建参数 <code>-Djava.security.properties=path/to/security.properties</code> 指定一个自定义的 security.properties，在自定义文件中注册 Security Provider。</p>
+<h1 id="JCE-cannot-authenticate-the-provider-BC…"><a href="#JCE-cannot-authenticate-the-provider-BC…" class="headerlink" title="JCE cannot authenticate the provider BC…"></a>JCE cannot authenticate the provider BC…</h1><p>就算用了 Spring Boot 也不是非常顺利，虽然到目前 Native Image 可以成功构建和运行，但现在直接运行 Jar 文件反而会出现异常：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">java.lang.SecurityException: JCE cannot authenticate the provider BC</span><br><span class="line">Caused by: java.lang.SecurityException: JCE cannot authenticate the provider BC</span><br><span class="line">        at java.base/javax.crypto.Cipher.getInstance(Cipher.java:722)</span><br><span class="line">        at java.base/javax.crypto.Cipher.getInstance(Cipher.java:642)</span><br><span class="line">...</span><br><span class="line">Caused by: java.lang.IllegalStateException: zip file closed</span><br><span class="line">        at java.base/java.util.zip.ZipFile.ensureOpen(ZipFile.java:839)</span><br><span class="line">        at java.base/java.util.zip.ZipFile.getManifestName(ZipFile.java:1065)</span><br><span class="line">        at java.base/java.util.zip.ZipFile$1.getManifestName(ZipFile.java:1108)</span><br><span class="line">        at java.base/javax.crypto.JarVerifier.verifySingleJar(JarVerifier.java:464)</span><br></pre></td></tr></table></figure>
+
+<p>这是因为 Spring Boot 的 Jar in Jar 实现和 JCE 存在一些冲突（我猜的），有一个解决办法就是直接从本地文件加载 BC 对应的 jar 文件，而不是再使用 Spring 的 Jar in Jar，或者等待官方去修复这个问题。</p>
+<h1 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h1><p>终于靠着瞎编把这个系列写完了。这一个月边学边写博客，全都是为了分享一下之前研究 GraalVM Native Image 构建 Bouncy Castle 的收获，主打一个为了碟醋包饺子。这篇本来是合在<a href="/2023/08/01/native-image-and-spring/">上一篇</a>博客里，但是内容比较独立，还是决定拆出来单独发了。</p>
+<p>吐槽一下 GraalVM，这个项目也是有点迷惑操作的。我 6 月刚开始研究 Native Image 时，一开始看到官网上的 GraalVM 是 23.0 版本，结果有一天官网突然改版，所有文档链接全部失效，从搜索引擎进文档花式 404 页面，我只能靠着修改链接上的格式找到了部分文档（后来知道在 <a target="_blank" rel="noopener" href="https://github.com/oracle/graal/tree/master/docs">Github 仓库上</a>找文档）。对比不同版本文档也发现了有些不错的 feature 在调整后消失或者改名了，但是这种改动需要自己理解，如果你搜到了老文档，但是在新文档里没有或者对不上都是一件非常平常的事情。官网改后不久，GraalVM 也变成了 Oracle GraalVM JDK，下载安装的方式也变了，随着这种变动，ghcr 上的 GraalVM 镜像就对不上了，官方也没有及时更新，我在内部 CI/CD 中集成时，还要自己制作 builder 镜像（或者我应该直接使用 spring-boot:build-image 构建的思路？）。一个背靠大公司，备受社区期待的产品，经过了 5 年的打磨以后还是这个状态，我是不理解的。当然我不是一个专业的 Java 开发者，我也就是在自己的角度发表一些偏见。</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://www.graalvm.org/latest/reference-manual/native-image/dynamic-features/JCASecurityServices/">https://www.graalvm.org/latest/reference-manual/native-image/dynamic-features/JCASecurityServices/</a></li>
+<li><a target="_blank" rel="noopener" href="https://pulsar.apache.org/docs/3.0.x/security-bouncy-castle/">https://pulsar.apache.org/docs/3.0.x/security-bouncy-castle/</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/codewhale/bouncycastle-graalvm-native-image">https://github.com/codewhale/bouncycastle-graalvm-native-image</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/insinfo/java_native">https://github.com/insinfo/java_native</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/java/" rel="tag"># java</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2023/08/01/native-image-and-spring/" rel="prev" title="Native Image 与 Spring">
+                  <i class="fa fa-chevron-left"></i> Native Image 与 Spring
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2023</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">vizee</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://unpkg.com/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
