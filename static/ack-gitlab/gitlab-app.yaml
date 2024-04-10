@@ -1,0 +1,141 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: gitlab-app-pvc
+  namespace: gitlab
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: gitlab-nas-sc
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gitlab-app-cm
+  namespace: gitlab
+data:
+  DB_HOST: gitlab-pgsql-svc
+  DB_NAME: gitlabhq_production
+  DB_PASS: password
+  DB_PORT: '5432'
+  DB_USER: gitlab
+  GITLAB_BACKUP_SCHEDULE: weekly
+  GITLAB_BACKUP_SKIP: db
+  GITLAB_BACKUP_TIME: '04:00'
+  GITLAB_HOST: gitlab.example.com
+  GITLAB_HTTPS: 'true'
+  GITLAB_NOTIFY_ON_BROKEN_BUILDS: 'false'
+  GITLAB_NOTIFY_PUSHER: 'false'
+  GITLAB_ROOT_EMAIL: gitlab-admin@shinyway.com.cn
+  GITLAB_ROOT_PASSWORD: root_password
+  GITLAB_SECRETS_DB_KEY_BASE: db_key_base
+  GITLAB_SECRETS_OTP_KEY_BASE: otp_key_base
+  GITLAB_SECRETS_SECRET_KEY_BASE: secert_key_base
+  GITLAB_SSH_HOST: gitlab-ssh.example.com
+  GITLAB_SSH_PORT: '30022'
+  GITLAB_TIMEZONE: Beijing
+  REDIS_HOST: gitlab-redis-svc
+  REDIS_PORT: '6379'
+  TZ: Asia/Shanghai
+  SMTP_ENABLED: 'false'
+  IMAP_ENABLED: 'false'
+  GITLAB_SIGNUP_ENABLED: 'false'
+  GITLAB_REGISTRY_ENABLED: 'false'
+  GITLAB_PAGES_ENABLED: 'false'
+  GITLAB_MONITORING_SIDEKIQ_EXPORTER_ENABLED: 'false'
+  NGINX_HSTS_ENABLED: 'false'
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: gitlab-app
+  name: gitlab-app
+  namespace: gitlab
+spec:
+  podManagementPolicy: OrderedReady
+  replicas: 1
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: gitlab-app
+  serviceName: gitlab-app-svc
+  template:
+    metadata:
+      labels:
+        app: gitlab-app
+    spec:
+      containers:
+        - envFrom:
+            - configMapRef:
+                name: gitlab-app-cm
+          image: 'sameersbn/gitlab:16.10.1'
+          imagePullPolicy: IfNotPresent
+          name: gitlab-app
+          ports:
+            - containerPort: 80
+              name: http
+              protocol: TCP
+            - containerPort: 22
+              name: ssh
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            tcpSocket:
+              port: 80
+            timeoutSeconds: 1
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /home/git/data
+              name: gitlab-data
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: gitlab-data
+          persistentVolumeClaim:
+            claimName: gitlab-app-pvc
+  updateStrategy:
+    type: RollingUpdate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitlab-app-svc
+  namespace: gitlab
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 80
+  selector:
+    app: gitlab-app
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitlab-app-ssh-svc
+  namespace: gitlab
+spec:
+  externalTrafficPolicy: Cluster
+  internalTrafficPolicy: Cluster
+  ports:
+    - name: gitlab-app-ssh-svc-22-22
+      nodePort: 30022
+      port: 22
+      protocol: TCP
+      targetPort: 22
+  selector:
+    app: gitlab-app
+  type: NodePort
