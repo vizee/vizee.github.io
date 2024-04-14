@@ -29,7 +29,7 @@ data:
   GITLAB_HTTPS: 'true'
   GITLAB_NOTIFY_ON_BROKEN_BUILDS: 'false'
   GITLAB_NOTIFY_PUSHER: 'false'
-  GITLAB_ROOT_EMAIL: gitlab-admin@shinyway.com.cn
+  GITLAB_ROOT_EMAIL: gitlab-admin@example.com
   GITLAB_ROOT_PASSWORD: root_password
   GITLAB_SECRETS_DB_KEY_BASE: db_key_base
   GITLAB_SECRETS_OTP_KEY_BASE: otp_key_base
