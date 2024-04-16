@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 5.4.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha256-HtsXJanqjKTc8vVQjO4YMhiqFoXkfBsjBWcX91T1jr8=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"vizee.org","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.17.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-next/8.17.1/config.min.js"></script>
+
+    <meta name="description" content="GitLab RunnerGitLab Runner 是 GitLab CI&#x2F;CD 负责在 Pipeline 中执行 Job 的组件，部署在 GitLab 核心服务之外，通过主动注册的方式和 GitLab 建立通信。 Runner 可以直接在机器上运行，或者通过 Docker 或 K8s 部署运行，安装部分参考文档。然后就是启动 Runner 并注册到 GitLab，注册时需要提供：  GitLa">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于 Kubernetes 的 GitLab CI&#x2F;CD">
+<meta property="og:url" content="https://vizee.org/2024/04/16/gitlab-ci-k8s/index.html">
+<meta property="og:site_name" content="&#x2F;vizee">
+<meta property="og:description" content="GitLab RunnerGitLab Runner 是 GitLab CI&#x2F;CD 负责在 Pipeline 中执行 Job 的组件，部署在 GitLab 核心服务之外，通过主动注册的方式和 GitLab 建立通信。 Runner 可以直接在机器上运行，或者通过 Docker 或 K8s 部署运行，安装部分参考文档。然后就是启动 Runner 并注册到 GitLab，注册时需要提供：  GitLa">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-04-16T10:59:27.000Z">
+<meta property="article:modified_time" content="2024-04-16T11:06:02.887Z">
+<meta property="article:author" content="vizee">
+<meta property="article:tag" content="gitlab">
+<meta property="article:tag" content="kubernetes">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://vizee.org/2024/04/16/gitlab-ci-k8s/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://vizee.org/2024/04/16/gitlab-ci-k8s/","path":"2024/04/16/gitlab-ci-k8s/","title":"基于 Kubernetes 的 GitLab CI/CD"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>基于 Kubernetes 的 GitLab CI/CD | /vizee</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">/vizee</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#GitLab-Runner"><span class="nav-number">1.</span> <span class="nav-text">GitLab Runner</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Registration-Token-%E5%92%8C-Authentication-Token"><span class="nav-number">1.1.</span> <span class="nav-text">Registration Token 和 Authentication Token</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Runner-%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.2.</span> <span class="nav-text">Runner 类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Executor"><span class="nav-number">1.3.</span> <span class="nav-text">Executor</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%9A%E8%BF%87-Helm-%E5%AE%89%E8%A3%85-GitLab-Runner-Kuberntes-Executor"><span class="nav-number">1.4.</span> <span class="nav-text">通过 Helm 安装 GitLab Runner(Kuberntes Executor)</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CI-CD-YAML"><span class="nav-number">2.</span> <span class="nav-text">CI&#x2F;CD YAML</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%98%BF%E9%87%8C%E4%BA%91-ECI"><span class="nav-number">3.</span> <span class="nav-text">阿里云 ECI</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#K8s-%E4%B8%AD%E4%BD%BF%E7%94%A8-ECI"><span class="nav-number">3.1.</span> <span class="nav-text">K8s 中使用 ECI</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CI-Job-%E4%BD%BF%E7%94%A8-ECI"><span class="nav-number">3.2.</span> <span class="nav-text">CI Job 使用 ECI</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ACR-%E9%95%9C%E5%83%8F%E5%8A%A0%E9%80%9F"><span class="nav-number">3.3.</span> <span class="nav-text">ACR 镜像加速</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E6%9C%80%E5%90%8E"><span class="nav-number">4.</span> <span class="nav-text">写在最后</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">vizee</p>
+  <div class="site-description" itemprop="description">vegetable is zombie evilest enemy</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">63</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/vizee" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;vizee" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+    <div class="sidebar-inner sidebar-blogroll">
+      <div class="links-of-blogroll animated">
+        <div class="links-of-blogroll-title"><i class="fa fa-globe fa-fw"></i>
+          链接
+        </div>
+        <ul class="links-of-blogroll-list">
+            <li class="links-of-blogroll-item">
+              <a href="https://kingsamchen.github.io/" title="https:&#x2F;&#x2F;kingsamchen.github.io" rel="noopener" target="_blank">KC</a>
+            </li>
+            <li class="links-of-blogroll-item">
+              <a href="https://powman.org/" title="https:&#x2F;&#x2F;powman.org" rel="noopener" target="_blank">泡面</a>
+            </li>
+        </ul>
+      </div>
+    </div>
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://vizee.org/2024/04/16/gitlab-ci-k8s/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="vizee">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="/vizee">
+      <meta itemprop="description" content="vegetable is zombie evilest enemy">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="基于 Kubernetes 的 GitLab CI/CD | /vizee">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          基于 Kubernetes 的 GitLab CI/CD
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2024-04-16 18:59:27 / 修改时间：19:06:02" itemprop="dateCreated datePublished" datetime="2024-04-16T18:59:27+08:00">2024-04-16</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="GitLab-Runner"><a href="#GitLab-Runner" class="headerlink" title="GitLab Runner"></a>GitLab Runner</h1><p>GitLab Runner 是 GitLab CI/CD 负责在 Pipeline 中执行 Job 的组件，部署在 GitLab 核心服务之外，通过主动注册的方式和 GitLab 建立通信。</p>
+<p>Runner 可以直接在机器上运行，或者通过 Docker 或 K8s 部署运行，安装部分参考<a target="_blank" rel="noopener" href="https://docs.gitlab.com/16.10/runner/install/">文档</a>。然后就是启动 Runner 并注册到 GitLab，注册时需要提供：</p>
+<ul>
+<li>GitLab 对外的 URL：Runner 会通过这个 URL 访问 GitLab，例如 <a target="_blank" rel="noopener" href="https://example.com/">https://example.com</a></li>
+<li>认证 Token：Token 从 GitLab 中获取，GitLab 通过 Token 认证 Runner，Token 会标识不同的 Runner 类型</li>
+<li>Runner 配置，例如 Executor 类型</li>
+</ul>
+<h2 id="Registration-Token-和-Authentication-Token"><a href="#Registration-Token-和-Authentication-Token" class="headerlink" title="Registration Token 和 Authentication Token"></a>Registration Token 和 Authentication Token</h2><p>现阶段 Runner 注册支持两种类型的 Token：<a target="_blank" rel="noopener" href="https://docs.gitlab.com/16.10/ee/security/token_overview.html#runner-registration-tokens-deprecated"><em>Registration Token</em></a> 和 <a target="_blank" rel="noopener" href="https://docs.gitlab.com/16.10/ee/security/token_overview.html#runner-authentication-tokens"><em>Authentication Token</em></a>。</p>
+<p>Registration Token 是 GitLab 15.10 之前 Runner 的认证方式，目前已经被标记为<strong>弃用</strong>。在 Runner 注册时提供从 GitLab 中获取的 Registration Token，只要配置没问题，Runner 就会出现在 GitLab Runner 实例列表中，可以使用相同的 Registration Token 注册多个 Runner 实例。Runner 重启（你也可以认为时重新注册）后也会成为新的 Runner 实例，之前实例上的配置都会丢失。</p>
+<p>Authentication Token 是 GitLab 目前默认的认证方式。这种方式需要你在 GitLab 上创建 Runner 实例，然后获得 Runner 实例的 Authentication Token，原版注册需要的部分配置从注册 Runner 时提供改为了在 Runner 实例上配置。</p>
+<p>后续 GitLab 会按<a target="_blank" rel="noopener" href="https://docs.gitlab.com/16.9/ee/ci/runners/new_creation_workflow.html#estimated-time-frame-for-planned-changes">计划</a>弃用和删除 Registration Token，所以在 16.0 版本后尽可能 Authentication Token 方式注册 Runner。</p>
+<h2 id="Runner-类型"><a href="#Runner-类型" class="headerlink" title="Runner 类型"></a>Runner 类型</h2><p>Runner 分为三种类型，分别是：Instance Runner、Group Runner 和 Project Runner。</p>
+<p>Instance Runner 是对所有项目和组可见的共享 Runner。Instance Runner 的 Authentication Token 在 <code>Admin Area &gt; CI/CD &gt; Runners</code>，通过 <code>New instance runner</code> 创建 Runner 后显示，并且在注册后无法再次看到。如果使用 Registration Token 在相同位置通过 <code>Register an instance runner</code> 获取，Token 只会在 Reset 后改变。</p>
+<p>如果想要 Instance Runner 对全部项目启用，通过管理员身份启用 <code>Admin Area &gt; Settings &gt; CI/CD &gt; Continuous Integration and Deployment</code> 的 <code>Enable shared runners for new projects</code>，这个选项默认启用。如果只想针对部分项目启用，可以在项目的 <code>Settings &gt; CI/CD &gt; Runners</code> 中单独启用 <code>Enable shared runners for this project</code>。</p>
+<p>Group Runner 是对组可见的 Runner，组内所有项目的子组的项目都会默认启用。默认情况下，组的 Owner 可以注册 Runner，方式和 <code>Instance Runner</code> 接近，在组的 <code>Build &gt; Runners</code> 页面创建 Runner 后获取到 Token。你可以在组的 <code>Settings &gt; CI/CD</code> 的 <code>Runners</code> 项下选择是否启用 Instance Runner。</p>
+<p>Project Runner 是仅对项目可见的 Runner，在项目 <code>Settings &gt; CI/CD &gt; Runners</code> 下创建 Runner，Runner 注册成功后默认仅用于被注册的项目。Project Runner 也允许被共享给其他项目，在 <code>Admin Area &gt; Runners</code> 或者项目的 Runners 设置页面中找到你要共享的 Runner，编辑 Runner，通过 <code>Select projects to assign to this runner</code> 为其他项目启用这个 Runner。注意 Group Runner 是没有类似配置的。</p>
+<h2 id="Executor"><a href="#Executor" class="headerlink" title="Executor"></a>Executor</h2><p><a target="_blank" rel="noopener" href="https://docs.gitlab.com/runner/executors/">Executor</a> 负责在不同环境里执行 Job，例如直接在机器上执行 Job，或是临时创建一个 VM 去运行 Job，再或是使用 Docker 或 K8s 执行 Job 等等。Runner 配置 Executor 并不一定表示 Runner 和 Executor 必须在用同一个环境，例如可以 Runner 部署在 K8s 中，但是通过 SSH 执行 Job。</p>
+<p>如果想在 Docker 环境下构建容器镜像，可能需要 Docker 执行器配置<a target="_blank" rel="noopener" href="https://docs.gitlab.com/runner/executors/docker.html#privileged-mode">特权模式</a>来访问宿主机上的 Docker，这会带来一定的<a target="_blank" rel="noopener" href="https://docs.gitlab.com/runner/security/index.html#usage-of-docker-executor">安全风险</a>。推荐使用 <a target="_blank" rel="noopener" href="https://docs.docker.com/engine/security/rootless/#rootless-docker-in-docker">dind-rootless</a> 镜像或者不依赖特权模式的构建方式来构建容器镜像，例如 <a target="_blank" rel="noopener" href="https://github.com/GoogleContainerTools/kaniko">kaniko</a>。</p>
+<p>K8s 执行器通过 K8s API 来管理 CI Job 的 Pod，需要为 Runner 创建对应权限的 RBAC，再由 Pod ServiceAccount 授权到 Runner。Pod 容器内的安全限制和 Docker 类似，应尽量避免通过特权模式构建容器镜像。</p>
+<h2 id="通过-Helm-安装-GitLab-Runner-Kuberntes-Executor"><a href="#通过-Helm-安装-GitLab-Runner-Kuberntes-Executor" class="headerlink" title="通过 Helm 安装 GitLab Runner(Kuberntes Executor)"></a>通过 Helm 安装 GitLab Runner(Kuberntes Executor)</h2><p>添加 GitLab chart repo：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">helm repo add gitlab https://charts.gitlab.io/</span><br><span class="line">helm repo update</span><br></pre></td></tr></table></figure>
+
+<p>通过 <code>helm show values</code> 获取默认 values：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">helm show values gitlab/gitlab-runner &gt; gitlab-runner-values.yaml</span><br></pre></td></tr></table></figure>
+
+<p>或者直接参考我的文件：<a href="/static/gitlab-ci/gitlab-runner-values.yaml">gitlab-runner-values.yaml</a>，注意我为了内外测试配置了 <em>Host Aliases</em>。</p>
+<p>然后安装 GitLab Runner：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">helm upgrade -i -n gitlab -f ./gitlab-runner-values.yaml gitlab-runner gitlab/gitlab-runner</span><br></pre></td></tr></table></figure>
+
+<p>顺利的话，在获取 Token 的地方会看到 Runner 成功注册的信息。</p>
+<h1 id="CI-CD-YAML"><a href="#CI-CD-YAML" class="headerlink" title="CI/CD YAML"></a>CI/CD YAML</h1><p>你只需要项目根目录创建 <code>.gitlab-ci.yml</code>，每次代码提交时，GitLab 都会根据这个文件创建对应 CI/CD 任务。</p>
+<p>参考 GitLab 为项目创建的默认 <code>.gitlab-ci.yml</code>：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># This file is a template, and might need editing before it works on your project.</span></span><br><span class="line"><span class="comment"># This is a sample GitLab CI/CD configuration file that should run without any modifications.</span></span><br><span class="line"><span class="comment"># It demonstrates a basic 3 stage CI/CD pipeline. Instead of real tests or scripts,</span></span><br><span class="line"><span class="comment"># it uses echo commands to simulate the pipeline execution.</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># A pipeline is composed of independent jobs that run scripts, grouped into stages.</span></span><br><span class="line"><span class="comment"># Stages run in sequential order, but jobs within stages run in parallel.</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># For more information, see: https://docs.gitlab.com/ee/ci/yaml/index.html#stages</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># You can copy and paste this template into a new `.gitlab-ci.yml` file.</span></span><br><span class="line"><span class="comment"># You should not add this template to an existing `.gitlab-ci.yml` file by using the `include:` keyword.</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># To contribute improvements to CI/CD templates, please follow the Development guide at:</span></span><br><span class="line"><span class="comment"># https://docs.gitlab.com/ee/development/cicd/templates.html</span></span><br><span class="line"><span class="comment"># This specific template is located at:</span></span><br><span class="line"><span class="comment"># https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Getting-Started.gitlab-ci.yml</span></span><br><span class="line"></span><br><span class="line"><span class="attr">stages:</span>          <span class="comment"># List of stages for jobs, and their order of execution</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">build</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">test</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">deploy</span></span><br><span class="line"></span><br><span class="line"><span class="attr">build-job:</span>       <span class="comment"># This job runs in the build stage, which runs first.</span></span><br><span class="line">  <span class="attr">stage:</span> <span class="string">build</span></span><br><span class="line">  <span class="attr">script:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">echo</span> <span class="string">&quot;Compiling the code...&quot;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">echo</span> <span class="string">&quot;Compile complete.&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">unit-test-job:</span>   <span class="comment"># This job runs in the test stage.</span></span><br><span class="line">  <span class="attr">stage:</span> <span class="string">test</span>    <span class="comment"># It only starts when the job in the build stage completes successfully.</span></span><br><span class="line">  <span class="attr">script:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">echo</span> <span class="string">&quot;Running unit tests... This will take about 60 seconds.&quot;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">sleep</span> <span class="number">60</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">echo</span> <span class="string">&quot;Code coverage is 90%&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">lint-test-job:</span>   <span class="comment"># This job also runs in the test stage.</span></span><br><span class="line">  <span class="attr">stage:</span> <span class="string">test</span>    <span class="comment"># It can run at the same time as unit-test-job (in parallel).</span></span><br><span class="line">  <span class="attr">script:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">echo</span> <span class="string">&quot;Linting code... This will take about 10 seconds.&quot;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">sleep</span> <span class="number">10</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">echo</span> <span class="string">&quot;No lint issues found.&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">deploy-job:</span>      <span class="comment"># This job runs in the deploy stage.</span></span><br><span class="line">  <span class="attr">stage:</span> <span class="string">deploy</span>  <span class="comment"># It only runs when *both* jobs in the test stage complete successfully.</span></span><br><span class="line">  <span class="attr">environment:</span> <span class="string">production</span></span><br><span class="line">  <span class="attr">script:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">echo</span> <span class="string">&quot;Deploying application...&quot;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">echo</span> <span class="string">&quot;Application successfully deployed.&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>通过这个例子快速了解几个概念：</p>
+<ul>
+<li><em>Job</em> 定义一个 CI 子任务，包括执行的脚本，所属的 stage 和 environment 等配置</li>
+<li><em>Stage</em> 是 Job 的合集，同一个 Stage 下的 Job 并发执行，多个 Stage 由 <code>stages</code> 决定顺序，如果没有配置 Stage，默认使用 <code>test</code> 作为 Stage</li>
+<li><em>Environment</em> 用来描述关联部署环境以及相关的部署动作，不是必须的</li>
+</ul>
+<p>把这个例子添加到项目并提交代码后，你就可以在项目 <code>Build &gt; Pipelines</code> 看到 CI 任务的执行情况。</p>
+<p>如果你安装 GitLab Runner 用的是我的 gitlab-runner-values.yaml，那么执行 Job 的 Pod 镜像就会是配置中指定的 <code>ubuntu:22.04</code>。</p>
+<p>GitLab CI/CD YAML 配置非常丰富，建议参考<a target="_blank" rel="noopener" href="https://docs.gitlab.com/ee/ci/yaml/">官方文档</a>，我就不细聊了。</p>
+<h1 id="阿里云-ECI"><a href="#阿里云-ECI" class="headerlink" title="阿里云 ECI"></a>阿里云 ECI</h1><p>阿里云 ECI(Elastic Container Instance) 可以灵活申请容器计算资源，并且在容器退出后回收资源，费用按量收取，通常用于 Serverless 场景。在 CI 场景中，如果不是对构建时间特别关注，通过 ECI 执行 CI Job 可以节约不少资源。</p>
+<h2 id="K8s-中使用-ECI"><a href="#K8s-中使用-ECI" class="headerlink" title="K8s 中使用 ECI"></a>K8s 中使用 ECI</h2><p>ECI 对接 K8s 集群非常方便，ACK 集群只需要在组件管理中安装 <code>Virtual Node</code>，就可以在节点列表下看到 <code>virtual-kubelet-&lt;network-region&gt;</code>，为了高可用，Virtual Node 组件通常会在 ACK 每个网络区下部署一个 virtual-kubelet。如果是阿里云自建 K8s 集群，安装可以参考<a target="_blank" rel="noopener" href="https://help.aliyun.com/zh/eci/user-guide/use-vnodectl-to-connect-a-vnode-to-a-self-managed-kubernetes-cluster">文档</a>。</p>
+<p>在成功安装 virtual kubelet 后，只需要为 Pod 增加 Label <code>alibabacloud.com/eci: true</code> 就能把 Pod 调度到 ECI 中，你也可以根据<a target="_blank" rel="noopener" href="https://help.aliyun.com/zh/eci/user-guide/pod-annotations-1">文档</a> 调整容器的 ECI 配置。如果是业务中使用，不希望 ECI 配置侵入，可以通过 <a target="_blank" rel="noopener" href="https://help.aliyun.com/zh/eci/user-guide/configure-an-eci-profile">eci-profile</a> 方式配置 ECI Pod。</p>
+<h2 id="CI-Job-使用-ECI"><a href="#CI-Job-使用-ECI" class="headerlink" title="CI Job 使用 ECI"></a>CI Job 使用 ECI</h2><p>GitLab Runner 使用 ECI 可以参考以下配置</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">runners:</span></span><br><span class="line">  <span class="string">...</span></span><br><span class="line">  <span class="attr">config:</span> <span class="string">|</span></span><br><span class="line"><span class="string">    [[runners]]</span></span><br><span class="line"><span class="string">      ...</span></span><br><span class="line"><span class="string">      [runners.kubernetes]</span></span><br><span class="line"><span class="string">        ...</span></span><br><span class="line"><span class="string">        cpu_limit = &quot;1&quot;</span></span><br><span class="line"><span class="string">        memory_limit = &quot;2Gi&quot;</span></span><br><span class="line"><span class="string">        [runners.kubernetes.pod_labels]</span></span><br><span class="line"><span class="string">          &quot;alibabacloud.com/eci&quot; = &quot;true&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>除了必须的 Pod Label，把 Pod 调度到 ECI 强烈建议增加 <code>cpu_limit</code> 和 <code>memory_limit</code> 来限制每次创建的 ECI 容器资源，这影响到 ECI 计费。</p>
+<p>在 GitLab CI/CD 中使用 ECI 还需要特别注意一点，多个 Job 任务会启动多个 Pod，每个 Pod 创建后调度到 ECI 过程非常慢，Stage 越多这部分时间的开销越大（同 Stage 下并发 Job 可以接受）。如果启动镜像相同，可以考虑调整 CI 流程，把多个 Job 合并到一个 Job 中。</p>
+<h2 id="ACR-镜像加速"><a href="#ACR-镜像加速" class="headerlink" title="ACR 镜像加速"></a>ACR 镜像加速</h2><p>Pod 启动后可以在 ECI 控制台中看到正在执行的容器，ECI 会把执行过的镜像缓存以加速将来容器的运行。我们可以使用阿里云的 ACR 来管理镜像，这样就可以通过内网端点来加速拉取镜像了。</p>
+<p>ECI 默认支持<a target="_blank" rel="noopener" href="https://help.aliyun.com/zh/eci/user-guide/pull-images-from-a-container-registry-enterprise-edition-instance-without-using-a-secret-2">免密拉取</a>同账号下 ACR 中的镜像，也能通过 RAM 授权跨账号访问 ACR。</p>
+<p>不过 GitLab Runner 也支持 <a target="_blank" rel="noopener" href="https://kubernetes.io/zh-cn/docs/tasks/configure-pod-container/pull-image-private-registry/">Image Pull Secret</a> 拉取镜像，在 Runner 的命名空间下创建 Secret <code>acr-pull-secret</code> 后在 Runner 配置中引用：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">runners:</span></span><br><span class="line">  <span class="string">...</span></span><br><span class="line">  <span class="attr">config:</span> <span class="string">|</span></span><br><span class="line"><span class="string">    [[runners]]</span></span><br><span class="line"><span class="string">      ...</span></span><br><span class="line"><span class="string">      [runners.kubernetes]</span></span><br><span class="line"><span class="string">        ...</span></span><br><span class="line"><span class="string">        image_pull_secrets = [&quot;acr-pull-secret&quot;]</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h1><p>我只用到了 GitLab CI/CD 很小部分的功能，像是 Service、Cache、Artifact 之类的功能只能说下次一定了。原本写了点在 CI 里用 kaniko 的内容，写着太烦，全给删了。另外每次聊这些东西都会聊到阿里云产品，只是为了分享一下使用经验或者踩过的坑。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/gitlab/" rel="tag"># gitlab</a>
+              <a href="/tags/kubernetes/" rel="tag"># kubernetes</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/04/10/gitlab-aliyun-ack/" rel="prev" title="在阿里云 ACK 中部署 GitLab">
+                  <i class="fa fa-chevron-left"></i> 在阿里云 ACK 中部署 GitLab
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2024</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">vizee</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-next/8.17.1/comments.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-next/8.17.1/utils.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-next/8.17.1/motion.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-next/8.17.1/schemes/muse.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-theme-next/8.17.1/next-boot.min.js"></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
