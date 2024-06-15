@@ -28,7 +28,7 @@
 <meta property="og:description" content="GraalVM Native ImageGraalVM 是 Oracle 开发的 JDK，本身就提供了更好性能的 JVM，GraalVM Native Image 可以通过 AOT 把 Java 代码直接编译成二进制可执行文件，编译后的二进制不再依赖 JVM，更快的启动速度，更小的运行内存，并且不会对性能有大影响。 Native Image 会执行静态分析，从应用入口（即 main）开始，找到所有">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-08-01T13:11:03.000Z">
-<meta property="article:modified_time" content="2023-08-01T16:47:07.718Z">
+<meta property="article:modified_time" content="2024-06-15T13:27:43.417Z">
 <meta property="article:author" content="vizee">
 <meta property="article:tag" content="java">
 <meta name="twitter:card" content="summary">
@@ -214,7 +214,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2023-08-02 00:47:07" itemprop="dateModified" datetime="2023-08-02T00:47:07+08:00">2023-08-02</time>
+      <time title="修改时间：2024-06-15 21:27:43" itemprop="dateModified" datetime="2024-06-15T21:27:43+08:00">2024-06-15</time>
     </span>
 
   
@@ -227,7 +227,7 @@
     
     
     <div class="post-body" itemprop="articleBody"><h1 id="GraalVM-Native-Image"><a href="#GraalVM-Native-Image" class="headerlink" title="GraalVM Native Image"></a>GraalVM Native Image</h1><p>GraalVM 是 Oracle 开发的 JDK，本身就提供了更好性能的 JVM，GraalVM Native Image 可以通过 AOT 把 Java 代码直接编译成二进制可执行文件，编译后的二进制不再依赖 JVM，更快的启动速度，更小的运行内存，并且不会对性能有大影响。</p>
-<p>Native Image 会执行静态分析，从应用入口（即 main）开始，找到所有会被访问的方法，并且只会编译找到的代码。完全按照 JVM 执行的逻辑去静态分析是不现实的，所以 Native Image 静态分析基于一个叫*封闭世界假设(closed-world assumption)*的约束：只考虑构建时的已知代码，不允许在运行时增加加载新代码。</p>
+<p>Native Image 会执行静态分析，从应用入口（即 main）开始，找到所有会被访问的方法，并且只会编译找到的代码。完全按照 JVM 执行的逻辑去静态分析是不现实的，所以 Native Image 静态分析基于一个叫 <em>封闭世界假设(closed-world assumption)</em> 的约束：只考虑构建时的已知代码，不允许在运行时增加加载新代码。</p>
 <p>下载安装 GraalVM 后你还需要安装必要的构建工具和 z-lib，例如 Ubuntu 下：</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install build-essential zlib1g-dev</span><br></pre></td></tr></table></figure>
 
