@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<!-- saved from url=(0036)https://vizee.org/static/concat.html -->
+<html lang="zh-CN">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    <style>
+        .input {
+            width: 100%;
+            min-height: 200px;
+            max-height: 500px
+        }
+
+        button {
+            padding: 4px;
+            min-width: 60px;
+            background-color: darkgray;
+            border: wheat;
+        }
+
+        .his {
+            margin-top: 16px
+        }
+
+        .box {
+            border: dashed 1px;
+            text-align: left
+        }
+
+        body {
+            background: #f2f2f2;
+            color: #333;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #222;
+                color: #eee;
+            }
+
+            .input {
+                background-color: #222;
+                color: #eee;
+            }
+        }
+
+    </style>
+    <title>文本拼接</title>
+</head>
+
+<body>
+    <script>
+        'use strict';
+
+        function isLetter(c) {
+            let v = c.charCodeAt();
+            return (v >= 65 && v <= 90) || (v >= 97 && v <= 122);
+        }
+
+        function concat_text(text, comment) {
+            let lines = text.split("\n");
+            let s = "";
+            let broke = true;
+            for (let line of lines) {
+                line = line.trim();
+                if (!broke) {
+                    s += " ";
+                }
+                if (comment && line.startsWith("//")) {
+                    line = line.substr(2).trimStart();
+                }
+                broke = line.endsWith("-");
+                if (broke) {
+                    line = line.substr(0, line.length - 1);
+                }
+                let prev = "";
+                for (let i = 0; i < line.length; i++) {
+                    let cur = line.charAt(i);
+                    if (cur == '-' && line.charAt(i + 1) == ' ' && isLetter(prev) && isLetter(line.charAt(i + 2))) {
+                        i++;
+                        continue;
+                    }
+                    s += cur;
+                    prev = cur;
+                }
+            }
+            return s;
+        }
+
+        function do_reset() {
+            document.getElementById("input").value = "";
+        }
+
+        function do_patse() {
+            navigator.clipboard.readText()
+                .then(text => {
+                    document.getElementById("input").value = text;
+                    do_concat();
+                })
+                .catch(err => { console.log(err); });
+        }
+
+        function do_append() {
+            navigator.clipboard.readText()
+                .then(text => {
+                    document.getElementById("input").value += "\n" + text;
+                    do_concat();
+                })
+                .catch(err => { console.log(err); });
+        }
+
+        function do_concat() {
+            let input = document.getElementById("input");
+            let text = concat_text(input.value, document.getElementById("comment").checked).trim();
+            if (text.length === 0) {
+                return;
+            }
+            for (let i = 4; i != 0; i--) {
+                document.getElementById("his" + i).textContent = document.getElementById("his" + (i - 1)).textContent
+            }
+            let t = document.getElementById("his0");
+            t.textContent = text;
+            setTimeout(() => { do_select(t) }, 0);
+        }
+
+        function do_select(obj) {
+            let sel = window.getSelection();
+            let range = document.createRange();
+            range.selectNodeContents(obj);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+
+        function do_deepl() {
+            let t = document.getElementById("his0");
+            if (t.innerText === '') {
+                return;
+            }
+            window.open('https://www.deepl.com/translator#en/zh/' + encodeURIComponent(t.innerText), '_blank');
+        }
+
+        function do_copy(btn) {
+            let t = document.getElementById("his0");
+            if (t.textContent === '') {
+                return;
+            }
+            navigator.clipboard.writeText(t.textContent).then(() => {
+                btn.textContent = 'copied';
+                setTimeout(() => { btn.textContent = 'copy' }, 1000);
+            }, () => {
+            	console.log('copy failed');
+            });
+        }
+    </script>
+    <div style="text-align:center; margin:50px; font-family:'Segoe UI'">
+        <div>
+            <textarea id="input" class="input" onfocus="this.select()" onpaste="setTimeout(do_concat, 0)"
+                autofocus=""></textarea>
+        </div>
+        <div style="margin-top: 20px;">
+            <button onclick="do_patse()">paste</button>
+            <button onclick="do_append()">append</button>
+            <button onclick="do_concat()">concat</button>
+            <button onclick="do_reset()">reset</button>
+            <button onclick="do_deepl()">DeepL</button>
+            <span>
+                <input type="checkbox" id="comment">
+                <label for="comment">comment</label>
+            </span>
+        </div>
+        <div class="his">
+            <div style="text-align: left;"><button onclick="do_copy(this)">copy</button></div>
+            <div id="his0" class="box" onclick="do_select(this)"></div>
+        </div>
+        <div class="his">
+            <div id="his1" class="box"></div>
+        </div>
+        <div class="his">
+            <div id="his2" class="box"></div>
+        </div>
+        <div class="his">
+            <div id="his3" class="box"></div>
+        </div>
+        <div class="his">
+            <div id="his4" class="box"></div>
+        </div>
+    </div>
+
+</body>
+
+</html>
